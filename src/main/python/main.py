@@ -77,9 +77,9 @@ class MainWindow(QWidget):
         mainLayout.addLayout(self.algorithmsLayout)
         # ALGORITHMS
 
-        #self.openFileNameDialog()
-        #self.openFileNamesDialog()
-        #self.saveFileDialog()
+        # self.openFileNameDialog()
+        # self.openFileNamesDialog()
+        # self.saveFileDialog()
 
         self.setLayout(mainLayout)
         self.show()
@@ -88,7 +88,7 @@ class MainWindow(QWidget):
         options = QFileDialog.Options()
         # options |= QFileDialog.DontUseNativeDialog
         filePath, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
-                                                  "RAW files (*.raw);;JPG files (*.jpg)", options=options)
+                                                  "Images (*.jpg *.raw *.ppm *.RAW)", options=options)
         if filePath:
             self.selectedFile_changed(filePath)
 
@@ -100,6 +100,7 @@ class MainWindow(QWidget):
     def imageVisualizer_clicked(self):
         self.imageVisualizerWindow = ImageWindow(self.selectedFilePath)
         self.imageVisualizerWindow.show()
+
 
 def main():
     app = QApplication(sys.argv)
