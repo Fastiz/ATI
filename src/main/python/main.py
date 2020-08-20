@@ -7,20 +7,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFil
     QLabel, QPushButton, QGroupBox
 from PyQt5.QtGui import QIcon, QPixmap
 
-
-class ImageWindow(QWidget):
-    def __init__(self, selectedFilePath):
-        super().__init__()
-        self.selectedFilePath = selectedFilePath
-        self.initUI()
-
-    def initUI(self):
-        self.setWindowTitle("Selected image visualizer")
-
-        label = QLabel(self)
-        pixmap = QPixmap(self.selectedFilePath)
-        label.setPixmap(pixmap)
-        self.resize(pixmap.width(), pixmap.height())
+from src.main.python.ImageWindow import ImageWindow
 
 
 class MainWindow(QWidget):
@@ -34,6 +21,8 @@ class MainWindow(QWidget):
         self.initUI()
 
         self.selectedFilePath = ""
+
+        self.imageVisualizerWindows = []
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -98,8 +87,9 @@ class MainWindow(QWidget):
         self.algorithmsLayout.setEnabled(True)
 
     def imageVisualizer_clicked(self):
-        self.imageVisualizerWindow = ImageWindow(self.selectedFilePath)
-        self.imageVisualizerWindow.show()
+        new_image_window = ImageWindow(self.selectedFilePath)
+        self.imageVisualizerWindows.append(new_image_window)
+        new_image_window.show()
 
 
 def main():
