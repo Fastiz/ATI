@@ -1,6 +1,7 @@
 import os
 import sys
 
+import numpy as np
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QVBoxLayout, QHBoxLayout, \
@@ -23,6 +24,7 @@ class MainWindow(QWidget):
         self.selectedFilePath = ""
 
         self.imageVisualizerWindows = []
+        self.widgetOnSelection = None
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -31,7 +33,7 @@ class MainWindow(QWidget):
         mainLayout = QVBoxLayout()
 
         # SELECT FILE
-        selectedFileLayout = QVBoxLayout();
+        selectedFileLayout = QVBoxLayout()
 
         fileLabelLayout = QHBoxLayout()
         fileLabelLayout.addWidget(QLabel("Selected file: "))
@@ -90,6 +92,20 @@ class MainWindow(QWidget):
         new_image_window = ImageWindow(self.selectedFilePath)
         self.imageVisualizerWindows.append(new_image_window)
         new_image_window.show()
+        new_image_window.subscribe_selection_event(self.on_selection)
+        new_image_window.subscribe_paste_event(self.on_paste)
+
+    def on_selection(self, widget):
+        self.widgetOnSelection = widget
+        for image_window in self.imageVisualizerWindows:
+            if image_window != widget:
+                image_window.reset_selection()
+
+    def on_paste(self, widget):
+        start, end = self.widgetOnSelection.get_selection()
+        image_to_paste = self.widgetOnSelection.get_image_array()[min([start[1], end[1]]):max([start[1], end[1]]),
+                         min([start[0], end[0]]):max([start[0], end[0]])]
+        widget.overlap_image(image_to_paste, widget.get_last_mouse_pos())
 
 
 def main():

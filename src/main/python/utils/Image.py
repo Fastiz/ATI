@@ -22,4 +22,4 @@ def load_raw_to_array(file_path):
 
 def save_image_array(file_path, img):
     im = Image.fromarray(img)
-    im.save(file_path + "test.jpg")
+    im.save(file_path)
