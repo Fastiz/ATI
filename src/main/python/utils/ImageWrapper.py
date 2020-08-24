@@ -34,6 +34,16 @@ class ImageWrapper:
 
         return ImageWrapper(image_element, file_path, filename, fileextension)
 
+    @staticmethod
+    def from_dimensions(w, h):
+        return ImageWrapper(Image.new('RGB', (w, h)))
+
+    def get_pixel(self, x, y):
+        return self.image_element.getpixel((x, y))
+
+    def set_pixel(self, x, y, value):
+        return self.image_element.putpixel((x, y), value)
+
     def dimensions(self):
         return self.image_element.size
 
