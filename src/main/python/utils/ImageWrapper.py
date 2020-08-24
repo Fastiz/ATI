@@ -35,4 +35,4 @@ class ImageWrapper:
 
     def __load_raw(self):
         image_data = open(self.file_path, "rb").read()
-        return Image.frombytes('L', (512, 512), image_data).convert('RGB')
+        return Image.frombytes('L', (512, 512), image_data)

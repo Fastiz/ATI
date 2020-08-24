@@ -78,7 +78,7 @@ class MainWindow(QWidget):
         options = QFileDialog.Options()
         # options |= QFileDialog.DontUseNativeDialog
         filePath, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
-                                                  "Images (*.jpg *.raw *.ppm *.RAW)", options=options)
+                                                  "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
         if filePath:
             self.selectedFile_changed(filePath)
 
