@@ -6,7 +6,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
     QLabel, QPushButton
 
 from src.main.python.ImageCropper import ImageCropper
+from src.main.python.components.MultipleImageSelector import MultipleImageSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
+from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
 
 
 class MainWindow(QWidget):
@@ -23,6 +25,7 @@ class MainWindow(QWidget):
         self.image = None
 
         self.imageVisualizerWindows = []
+        self.views = []
         self.widgetOnSelection = None
 
     def initUI(self):
@@ -57,7 +60,8 @@ class MainWindow(QWidget):
         algorithm1Button.clicked.connect(self.imageVisualizer_clicked)
         self.algorithmsLayout.addWidget(algorithm1Button)
 
-        algorithm2Button = QPushButton("Algorithm #2")
+        algorithm2Button = QPushButton("Image operations")
+        algorithm2Button.clicked.connect(self.operation_between_images)
         self.algorithmsLayout.addWidget(algorithm2Button)
 
         algorithm3Button = QPushButton("Algorithm #3")
@@ -86,7 +90,7 @@ class MainWindow(QWidget):
         self.selectedFilePath = filePath
         self.fileNameLabel.setText(os.path.basename(filePath))
         self.algorithmsLayout.setEnabled(True)
-        self.image = ImageWrapper(self.selectedFilePath)
+        self.image = ImageWrapper.from_path(self.selectedFilePath)
 
     def imageVisualizer_clicked(self):
         if self.image is not None:
@@ -107,6 +111,9 @@ class MainWindow(QWidget):
         image_to_paste = self.widgetOnSelection.get_image_array()[min([start[1], end[1]]):max([start[1], end[1]]),
                          min([start[0], end[0]]):max([start[0], end[0]])]
         widget.overlap_image(image_to_paste, widget.get_last_mouse_pos())
+
+    def operation_between_images(self):
+        self.views.append(OperationsBetweenImages())
 
 
 def main():

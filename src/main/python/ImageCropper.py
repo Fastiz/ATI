@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
 
-from src.main.python.ImageSectionSelector import ImageSectionSelector
+from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
 

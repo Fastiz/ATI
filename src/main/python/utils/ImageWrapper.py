@@ -1,22 +1,38 @@
-import io
 import os
 
 import PIL
 from PIL import Image
-from PyQt5.QtWidgets import QMessageBox
+
+
+def is_raw(fileextension):
+    return fileextension == ".pgm" or fileextension == ".raw" or fileextension == ".RAW"
+
+
+def load_raw(file_path):
+    image_data = open(file_path, "rb").read()
+    return Image.frombytes('L', (290, 207), image_data)
 
 
 class ImageWrapper:
-    def __init__(self, file_path: str):
+    def __init__(self, image: PIL.Image.Image, file_path=None, filename=None, fileextension=None):
+        self.image_element = image
         self.file_path = file_path
+        self.filename = filename
+        self.fileextension = fileextension
 
-        self.filename = os.path.basename(self.file_path)
-        self.fileextension = os.path.splitext(file_path)[1]
+    @staticmethod
+    def from_path(file_path):
+        file_path = file_path
 
-        if not self.__is_raw():
-            self.image_element = PIL.Image.open(file_path)
+        filename = os.path.basename(file_path)
+        fileextension = os.path.splitext(file_path)[1]
+
+        if not is_raw(fileextension):
+            image_element = PIL.Image.open(file_path)
         else:
-            self.image_element = self.__load_raw()
+            image_element = load_raw(file_path)
+
+        return ImageWrapper(image_element, file_path, filename, fileextension)
 
     def dimensions(self):
         return self.image_element.size
@@ -31,8 +47,7 @@ class ImageWrapper:
         return self.image_element
 
     def __is_raw(self):
-        return self.fileextension == ".pgm" or self.fileextension == ".raw"
+        return is_raw(self.fileextension)
 
     def __load_raw(self):
-        image_data = open(self.file_path, "rb").read()
-        return Image.frombytes('L', (512, 512), image_data)
+        return load_raw(self.file_path)
