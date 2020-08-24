@@ -2,3 +2,7 @@
 .idea/
 out/
 venv/*
+
+src/main/python/__pycache__/
+
+src/main/python/utils/__pycache__/

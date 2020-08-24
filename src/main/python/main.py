@@ -1,14 +1,12 @@
 import os
 import sys
 
-import numpy as np
-from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QPushButton, QGroupBox
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHBoxLayout, \
+    QLabel, QPushButton
 
-from src.main.python.ImageWindow import ImageWindow
+from src.main.python.ImageCropper import ImageCropper
+from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
 class MainWindow(QWidget):
@@ -22,6 +20,7 @@ class MainWindow(QWidget):
         self.initUI()
 
         self.selectedFilePath = ""
+        self.image = None
 
         self.imageVisualizerWindows = []
         self.widgetOnSelection = None
@@ -87,13 +86,15 @@ class MainWindow(QWidget):
         self.selectedFilePath = filePath
         self.fileNameLabel.setText(os.path.basename(filePath))
         self.algorithmsLayout.setEnabled(True)
+        self.image = ImageWrapper(self.selectedFilePath)
 
     def imageVisualizer_clicked(self):
-        new_image_window = ImageWindow(self.selectedFilePath)
-        self.imageVisualizerWindows.append(new_image_window)
-        new_image_window.show()
-        new_image_window.subscribe_selection_event(self.on_selection)
-        new_image_window.subscribe_paste_event(self.on_paste)
+        if self.image is not None:
+            new_image_window = ImageCropper(self.image)
+            self.imageVisualizerWindows.append(new_image_window)
+            new_image_window.show()
+            # new_image_window.subscribe_selection_event(self.on_selection)
+            # new_image_window.subscribe_paste_event(self.on_paste)
 
     def on_selection(self, widget):
         self.widgetOnSelection = widget
