@@ -60,11 +60,11 @@ class MainWindow(QWidget):
         algorithm1Button.clicked.connect(self.imageVisualizer_clicked)
         self.algorithmsLayout.addWidget(algorithm1Button)
 
-        algorithm2Button = QPushButton("Image operations")
+        algorithm2Button = QPushButton("Operations between Images")
         algorithm2Button.clicked.connect(self.operation_between_images)
         self.algorithmsLayout.addWidget(algorithm2Button)
 
-        algorithm3Button = QPushButton("Algorithm #3")
+        algorithm3Button = QPushButton("Contrast (K = 2)")
         self.algorithmsLayout.addWidget(algorithm3Button)
 
         self.algorithmsLayout.setEnabled(False)

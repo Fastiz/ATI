@@ -7,8 +7,9 @@ from PyQt5.QtCore import *
 
 from PIL.ImageQt import ImageQt
 
+from src.main.python.algorithms.channel_operations import channel_threshold, channel_contrast, channel_negative, \
+    channel_histogram
 from src.main.python.utils.ImageWrapper import ImageWrapper
-
 
 class ImageSectionSelector(QWidget):
     def __init__(self, image: ImageWrapper):
@@ -18,7 +19,16 @@ class ImageSectionSelector(QWidget):
         qim = ImageQt(image.image_element)
         # self.drawn_image = QPixmap(self.image.file_path)
         # self.drawn_image = QPixmap.fromImage(qim)
-        self.drawn_image = self.pil2pixmap(image.image_element)
+
+        channels = image.image_element.split()
+        for channel in channels:
+            # channel_negative(channel, 150)
+            x = channel_histogram(channel, True)
+
+        pil_img = Image.merge(image.image_element.mode, channels)
+
+        self.drawn_image = self.pil2pixmap(pil_img)
+        # self.drawn_image = self.pil2pixmap(image.image_element)
 
         self.selection_start = None
         self.selection_end = None
