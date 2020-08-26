@@ -3,9 +3,11 @@ import sys
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QPushButton
+    QLabel, QPushButton, QInputDialog
 
 from src.main.python.ImageCropper import ImageCropper
+from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
+    exponential_multiplicative_noise
 from src.main.python.algorithms.operations_between_images import equalize_histogram
 from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
@@ -22,6 +24,7 @@ class MainWindow(QWidget):
         self.width = 640
         self.height = 480
         self.initUI()
+        self.noiseLayout = None
 
         self.selectedFilePath = ""
         self.image = None
@@ -76,6 +79,23 @@ class MainWindow(QWidget):
 
         self.algorithmsLayout.setEnabled(False)
         mainLayout.addLayout(self.algorithmsLayout)
+
+        self.noiseLayout = QHBoxLayout()
+
+        gaussian_button = QPushButton("Gaussian additive noise")
+        gaussian_button.clicked.connect(self.gaussian_noise_clicked)
+        self.noiseLayout.addWidget(gaussian_button)
+
+        rayleigh_button = QPushButton("Rayleigh multiplicative noise")
+        rayleigh_button.clicked.connect(self.rayleigh_noise_clicked)
+        self.noiseLayout.addWidget(rayleigh_button)
+
+        exponential_button = QPushButton("Exponential additive noise")
+        exponential_button.clicked.connect(self.exponential_noise_clicked)
+        self.noiseLayout.addWidget(exponential_button)
+
+        mainLayout.addLayout(self.noiseLayout)
+
         # ALGORITHMS
 
         # self.openFileNameDialog()
@@ -124,6 +144,25 @@ class MainWindow(QWidget):
 
     def equalization(self):
         result = equalize_histogram(self.image)
+        self.show_result(result)
+
+    def gaussian_noise_clicked(self):
+        mu, _ = QInputDialog.getDouble(self, "Select mu (expected value)", "mu", 0)
+        sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
+        result = gaussian_additive_noise(self.image, mu, sigma)
+        self.show_result(result)
+
+    def rayleigh_noise_clicked(self):
+        gamma, _ = QInputDialog.getDouble(self, "Select gamma (expected value)", "gamma", 0)
+        result = rayleigh_multiplicative_noise(self.image, 1)
+        self.show_result(result)
+
+    def exponential_noise_clicked(self):
+        _lambda, _ = QInputDialog.getDouble(self, "Select lambda", "lambda", 1)
+        result = exponential_multiplicative_noise(self.image, _lambda)
+        self.show_result(result)
+
+    def show_result(self, result: ImageWrapper):
         new_image_window = ImageCropper(result)
         self.imageVisualizerWindows.append(new_image_window)
         new_image_window.show()
