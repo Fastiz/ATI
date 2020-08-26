@@ -124,8 +124,9 @@ class MainWindow(QWidget):
 
     def equalization(self):
         result = equalize_histogram(self.image)
-        self.popUpWindow = ImageSectionSelector(result)
-        self.popUpWindow.show()
+        new_image_window = ImageCropper(result)
+        self.imageVisualizerWindows.append(new_image_window)
+        new_image_window.show()
 
 
 def main():
