@@ -28,3 +28,22 @@ def rayleigh_multiplicative_noise(image: ImageWrapper, gamma):
 
 def exponential_multiplicative_noise(image: ImageWrapper, _lambda):
     return pixel_transformation(image, multiplicative_noise(lambda: np.random.exponential(scale=1/_lambda)))
+
+
+def salt_and_pepper(image: ImageWrapper, p0: float, p1: float):
+    def noise(x, y, val):
+        res = []
+
+        for v in val:
+            rnd: float = np.random.uniform(0, 1)
+
+            if rnd < p0:
+                res.append(0)
+            elif rnd > p1:
+                res.append(1)
+            else:
+                res.append(v)
+
+        return res
+
+    return pixel_transformation(image, noise)

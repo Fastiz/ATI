@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
 
 from src.main.python.ImageCropper import ImageCropper
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
-    exponential_multiplicative_noise
+    exponential_multiplicative_noise, salt_and_pepper
 from src.main.python.algorithms.operations_between_images import equalize_histogram
 from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
@@ -94,6 +94,10 @@ class MainWindow(QWidget):
         exponential_button.clicked.connect(self.exponential_noise_clicked)
         self.noiseLayout.addWidget(exponential_button)
 
+        salt_and_pepper_button = QPushButton("Salt and pepper noise")
+        salt_and_pepper_button.clicked.connect(self.salt_and_pepper)
+        self.noiseLayout.addWidget(salt_and_pepper_button)
+
         mainLayout.addLayout(self.noiseLayout)
 
         # ALGORITHMS
@@ -160,6 +164,12 @@ class MainWindow(QWidget):
     def exponential_noise_clicked(self):
         _lambda, _ = QInputDialog.getDouble(self, "Select lambda", "lambda", 1)
         result = exponential_multiplicative_noise(self.image, _lambda)
+        self.show_result(result)
+
+    def salt_and_pepper(self):
+        p0, _ = QInputDialog.getDouble(self, "p0", "p0", 0.1)
+        p1, _ = QInputDialog.getDouble(self, "p1", "p1", 0.9)
+        result = salt_and_pepper(self.image, p0, p1)
         self.show_result(result)
 
     def show_result(self, result: ImageWrapper):
