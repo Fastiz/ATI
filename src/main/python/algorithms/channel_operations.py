@@ -1,7 +1,7 @@
 from PIL.Image import Image
 import math
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def channel_mean(channel: Image):
     h, w = channel.size
@@ -93,7 +93,7 @@ def channel_histogram(channel: Image, display: bool = False):
         data[i] /= h * w
 
     if display:
-        plt.hist(data, bins=len(data))
+        plt.plot(data)
         plt.show()
 
     return data

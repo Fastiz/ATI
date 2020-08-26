@@ -35,11 +35,15 @@ class ImageWrapper:
         return ImageWrapper(image_element, file_path, filename, fileextension)
 
     @staticmethod
-    def from_dimensions(w, h):
-        return ImageWrapper(Image.new('RGB', (w, h)))
+    def from_dimensions(w, h, mode='RGB'):
+        return ImageWrapper(Image.new(mode, (w, h)))
 
     def get_pixel(self, x, y):
-        return self.image_element.getpixel((x, y))
+        val = self.image_element.getpixel((x, y))
+
+        if isinstance(val, int):
+            return [val]
+        return val
 
     def set_pixel(self, x, y, value):
         return self.image_element.putpixel((x, y), value)
@@ -61,3 +65,9 @@ class ImageWrapper:
 
     def __load_raw(self):
         return load_raw(self.file_path)
+
+    def get_image_element(self):
+        return self.image_element
+
+    def get_mode(self):
+        return self.image_element.mode

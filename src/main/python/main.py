@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
     QLabel, QPushButton
 
 from src.main.python.ImageCropper import ImageCropper
+from src.main.python.algorithms.operations_between_images import equalize_histogram
+from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
@@ -26,6 +28,7 @@ class MainWindow(QWidget):
 
         self.imageVisualizerWindows = []
         self.views = []
+        self.popUpWindow = None
         self.widgetOnSelection = None
 
     def initUI(self):
@@ -66,6 +69,10 @@ class MainWindow(QWidget):
 
         algorithm3Button = QPushButton("Contrast (K = 2)")
         self.algorithmsLayout.addWidget(algorithm3Button)
+
+        algorithm4Button = QPushButton("Equalization")
+        algorithm4Button.clicked.connect(self.equalization)
+        self.algorithmsLayout.addWidget(algorithm4Button)
 
         self.algorithmsLayout.setEnabled(False)
         mainLayout.addLayout(self.algorithmsLayout)
@@ -114,6 +121,11 @@ class MainWindow(QWidget):
 
     def operation_between_images(self):
         self.views.append(OperationsBetweenImages())
+
+    def equalization(self):
+        result = equalize_histogram(self.image)
+        self.popUpWindow = ImageSectionSelector(result)
+        self.popUpWindow.show()
 
 
 def main():
