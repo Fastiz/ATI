@@ -8,7 +8,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
 from src.main.python.ImageCropper import ImageCropper
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
-from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression
+from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression, \
+    gamma_power_function
 from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
@@ -80,6 +81,10 @@ class MainWindow(QWidget):
         algorithm5Button = QPushButton("Dynamic range compression")
         algorithm5Button.clicked.connect(self.dynamic_range_compression_clicked)
         self.algorithmsLayout.addWidget(algorithm5Button)
+
+        algorithm6Button = QPushButton("Gamma power function")
+        algorithm6Button.clicked.connect(self.gamma_power_function_clicked)
+        self.algorithmsLayout.addWidget(algorithm6Button)
 
         self.algorithmsLayout.setEnabled(False)
         mainLayout.addLayout(self.algorithmsLayout)
@@ -178,6 +183,11 @@ class MainWindow(QWidget):
 
     def dynamic_range_compression_clicked(self):
         result = dynamic_range_compression(self.image)
+        self.show_result(result)
+
+    def gamma_power_function_clicked(self):
+        gamma, _ = QInputDialog.getDouble(self, "gamma", "gamma", 0.1)
+        result = gamma_power_function(self.image, gamma)
         self.show_result(result)
 
     def show_result(self, result: ImageWrapper):

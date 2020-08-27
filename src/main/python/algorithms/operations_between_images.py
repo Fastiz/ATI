@@ -112,9 +112,18 @@ def max_gray_value(image: ImageWrapper):
 def dynamic_range_compression(image: ImageWrapper):
     max_values = max_gray_value(image)
 
-    c = [(255 - 1) / np.log(1 + R) for R in max_values]
+    c = [255 / np.log(1 + R) for R in max_values]
 
     def transformation(x, y, val):
         return [int(c[i] * np.log(1 + val[i])) for i in range(len(val))]
+
+    return pixel_transformation(image, transformation)
+
+
+def gamma_power_function(image: ImageWrapper, gamma: float):
+    c = np.power(255, 1-gamma)
+
+    def transformation(x, y, val):
+        return [int(c * np.power(r, gamma)) for r in val]
 
     return pixel_transformation(image, transformation)
