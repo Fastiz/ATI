@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
 from src.main.python.ImageCropper import ImageCropper
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
-from src.main.python.algorithms.operations_between_images import equalize_histogram
+from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression
 from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
@@ -77,6 +77,10 @@ class MainWindow(QWidget):
         algorithm4Button.clicked.connect(self.equalization)
         self.algorithmsLayout.addWidget(algorithm4Button)
 
+        algorithm5Button = QPushButton("Dynamic range compression")
+        algorithm5Button.clicked.connect(self.dynamic_range_compression_clicked)
+        self.algorithmsLayout.addWidget(algorithm5Button)
+
         self.algorithmsLayout.setEnabled(False)
         mainLayout.addLayout(self.algorithmsLayout)
 
@@ -95,7 +99,7 @@ class MainWindow(QWidget):
         self.noiseLayout.addWidget(exponential_button)
 
         salt_and_pepper_button = QPushButton("Salt and pepper noise")
-        salt_and_pepper_button.clicked.connect(self.salt_and_pepper)
+        salt_and_pepper_button.clicked.connect(self.salt_and_pepper_clicked)
         self.noiseLayout.addWidget(salt_and_pepper_button)
 
         mainLayout.addLayout(self.noiseLayout)
@@ -166,10 +170,14 @@ class MainWindow(QWidget):
         result = exponential_multiplicative_noise(self.image, _lambda)
         self.show_result(result)
 
-    def salt_and_pepper(self):
+    def salt_and_pepper_clicked(self):
         p0, _ = QInputDialog.getDouble(self, "p0", "p0", 0.1)
         p1, _ = QInputDialog.getDouble(self, "p1", "p1", 0.9)
         result = salt_and_pepper(self.image, p0, p1)
+        self.show_result(result)
+
+    def dynamic_range_compression_clicked(self):
+        result = dynamic_range_compression(self.image)
         self.show_result(result)
 
     def show_result(self, result: ImageWrapper):
