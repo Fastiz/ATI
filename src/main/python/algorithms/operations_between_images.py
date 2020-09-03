@@ -138,10 +138,10 @@ def max_gray_value(image: ImageWrapper):
     for i in range(len(channels)):
         channel = channels[i]
 
-        h, w = channel.size
+        w, h = channel.size
 
-        for x in range(w):
-            for y in range(h):
+        for x in range(w-1):
+            for y in range(h-1):
                 p = channel.getpixel((x, y))
                 if max_values[i] < p:
                     max_values[i] = p

@@ -81,6 +81,17 @@ def channel_negative(channel: Image, u: int):
     return channel
 
 
+def graph_histogram(channel: Image):
+    data = []
+    h, w = channel.size
+    for x in range(w):
+        for y in range(h):
+            data.append(channel.getpixel((y, x)))
+
+    plt.hist(data, bins=256, density=True)
+    plt.show()
+
+
 def channel_histogram(channel: Image, display: bool = False):
     data = [0] * 256
 
@@ -93,7 +104,6 @@ def channel_histogram(channel: Image, display: bool = False):
         data[i] /= h * w
 
     if display:
-        plt.plot(data)
-        plt.show()
+        graph_histogram(channel)
 
     return data
