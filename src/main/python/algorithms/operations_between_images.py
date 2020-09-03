@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List, Tuple
 
 from src.main.python.algorithms.channel_operations import channel_histogram
 from src.main.python.utils.ImageWrapper import ImageWrapper
@@ -30,35 +31,74 @@ def scalar_multiplication(first_image: ImageWrapper, scalar: float):
     return result
 
 
+def matrix_to_image(matrix: List[List[tuple]], mode=None) -> ImageWrapper:
+    w: int = len(matrix)
+    h: int = len(matrix[0])
+    result: ImageWrapper = ImageWrapper.from_dimensions(w, h, mode)
+    for x in range(w):
+        for y in range(h):
+            result.set_pixel(x, y, tuple([int(a) for a in matrix[x][y]]))
+    return result
+
+
+def normalized_matrix(matrix: List[List[tuple]]) -> List[List[tuple]]:
+    w: int = len(matrix)
+    h: int = len(matrix[0])
+
+    max_values: List[float] = [-float("inf")]*len(matrix[0][0])
+    min_values: List[float] = [float("inf")]*len(matrix[0][0])
+    for x in range(w):
+        for y in range(h):
+            val = matrix[x][y]
+            for i in range(len(val)):
+                v = val[i]
+                if max_values[i] < v:
+                    max_values[i] = v
+                if min_values[i] > v:
+                    min_values[i] = v
+
+    new_matrix: List[List[tuple]] = [[()]*h for i in range(w)]
+    for x in range(w):
+        for y in range(h):
+            val = matrix[x][y]
+            new_matrix[x][y] = tuple([255 * (val[i] - min_values[i]) / (max_values[i] - min_values[i])
+                                      if max_values[i] != min_values[i] else val[i]
+                                      for i in range(len(val))])
+
+    return new_matrix
+
+
 def pixel_to_pixel_operation(first_image: ImageWrapper, second_image: ImageWrapper, operation):
     assert first_image.dimensions() == second_image.dimensions()
 
     w, h = first_image.dimensions()
-
-    result = ImageWrapper.from_dimensions(w, h)
+    matrix = []
 
     for x in range(w):
+        row = []
         for y in range(h):
             val = [operation(first_image.get_pixel(x, y)[i], second_image.get_pixel(x, y)[i])
                    for i in range(len(first_image.get_pixel(x, y)))]
+            row.append(tuple(val))
+        matrix.append(row)
 
-            result.set_pixel(x, y, tuple(val))
-
-    return result
+    return matrix_to_image(normalized_matrix(matrix))
 
 
 def pixel_transformation(image: ImageWrapper, transformation_function):
     w, h = image.dimensions()
 
-    result = ImageWrapper.from_dimensions(w, h, mode=image.get_mode())
+    matrix = []
 
     for x in range(w):
+        row = []
         for y in range(h):
             val = transformation_function(x, y, image.get_pixel(x, y))
 
-            result.set_pixel(x, y, tuple(val))
+            row.append(tuple(val))
+        matrix.append(row)
 
-    return result
+    return matrix_to_image(normalized_matrix(matrix), mode=image.get_mode())
 
 
 def equalize_histogram(image: ImageWrapper):

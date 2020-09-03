@@ -7,13 +7,13 @@ from src.main.python.utils.ImageWrapper import ImageWrapper
 def multiplicative_noise(random_generator):
     def noise(x, y, val):
         rnd = random_generator()
-        return [int(random_generator() * v) % 255 for v in val]
+        return [random_generator() * v for v in val]
     return noise
 
 
 def additive_noise(random_generator):
     def noise(x, y, val):
-        result = [int(random_generator() + v) % 255 for v in val]
+        result = [random_generator() + v for v in val]
         return result
     return noise
 
