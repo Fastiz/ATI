@@ -71,7 +71,7 @@ def channel_threshold(channel: Image, u: int):  # Umbralización
     return channel
 
 
-def channel_negative(channel: Image, u: int):
+def channel_negative(channel: Image):
     h, w = channel.size
     for x in range(w):
         for y in range(h):
@@ -107,3 +107,87 @@ def channel_histogram(channel: Image, display: bool = False):
         graph_histogram(channel)
 
     return data
+
+
+def channel_sliding_window(channel: Image, window):
+    h, w = channel.size
+
+    window_size = len(window)
+    window_border_offset = math.floor(window_size / 2)
+
+    for x in range(w):
+        for y in range(h):
+            px_val = 0.0
+            for i in range(-window_border_offset, window_border_offset+1):
+                for j in range(-window_border_offset, window_border_offset+1):
+                    if 0 <= x + i < w and 0 <= y + j < h:
+                        px_val += window[i + window_border_offset][j + window_border_offset] * channel.getpixel((y+j, x+i))
+            channel.putpixel((y, x), int(px_val))
+
+    return channel
+
+def channel_mean_window(channel: Image, window_size: int):
+    window = np.full((window_size, window_size), 1/(window_size*window_size), dtype=float)
+    return channel_sliding_window(channel, window)
+
+
+def channel_gaussian_window(channel: Image, sigma: float):
+    h, w = channel.size
+
+    window_size = int(2 * sigma + 1)
+    window_border_offset = math.floor(window_size / 2)
+    window = np.full((window_size, window_size), 0, dtype=float)
+
+    factor = 1/(2*math.pi*sigma*sigma)
+    exp_factor = -1/(sigma*sigma)
+    for i in range(-window_border_offset, window_border_offset + 1):
+        for j in range(-window_border_offset, window_border_offset + 1):
+            window[i+window_border_offset][j+window_border_offset] = factor * math.exp(exp_factor * ((i**2) + (j**2)))
+
+    return channel_sliding_window(channel, window)
+
+
+def channel_median_window(channel: Image, window_size: int):
+    h, w = channel.size
+
+    window_border_offset = math.floor(window_size / 2)
+
+    for x in range(w):
+        for y in range(h):
+            px_val_list = []
+            for i in range(-window_border_offset, window_border_offset+1):
+                for j in range(-window_border_offset, window_border_offset+1):
+                    px_val_list.append(channel.getpixel((y+j, x+i)) if 0 <= x + i < w and 0 <= y + j < h else 0)
+            channel.putpixel((y, x), int(np.median(px_val_list)))
+
+    return channel
+
+
+def channel_ponderated_median_window_3x3(channel: Image):
+    h, w = channel.size
+
+    window_size = 3
+    window_border_offset = math.floor(window_size / 2)
+
+    window = [
+        [1, 2, 1],
+        [2, 4, 2],
+        [1, 2, 1],
+    ]
+
+    for x in range(w):
+        for y in range(h):
+            px_val_list = []
+            for i in range(-window_border_offset, window_border_offset+1):
+                for j in range(-window_border_offset, window_border_offset+1):
+                    for k in range(window[i + window_border_offset][j + window_border_offset]):
+                        px_val_list.append(channel.getpixel((y+j, x+i)) if 0 <= x + i < w and 0 <= y + j < h else 0)
+            channel.putpixel((y, x), int(np.median(px_val_list)))
+
+    return channel
+
+
+
+
+
+

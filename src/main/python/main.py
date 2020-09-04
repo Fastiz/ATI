@@ -1,10 +1,14 @@
 import os
 import sys
 
+from PIL import Image
+from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHBoxLayout, \
     QLabel, QPushButton, QInputDialog
 
+from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
@@ -14,6 +18,8 @@ from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
+
+import src.main.python.algorithms.channel_operations as op
 
 
 class MainWindow(QWidget):
@@ -34,6 +40,8 @@ class MainWindow(QWidget):
         self.views = []
         self.popUpWindow = None
         self.widgetOnSelection = None
+
+        my_config.MainWindowSelf = self
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -57,6 +65,12 @@ class MainWindow(QWidget):
 
         selectedFileLayout.addWidget(selectFileButton)
 
+        self.imageLabel = QLabel()
+        """pixmap = QPixmap.fromImage(self.image.image_element)
+        pixmap = pixmap.scaledToWidth(20)
+        self.imageLabel.setPixmap(pixmap)"""
+        selectedFileLayout.addWidget(self.imageLabel)
+
         mainLayout.addLayout(selectedFileLayout)
         # SELECT FILE
 
@@ -70,9 +84,6 @@ class MainWindow(QWidget):
         algorithm2Button = QPushButton("Operations between Images")
         algorithm2Button.clicked.connect(self.operation_between_images)
         self.algorithmsLayout.addWidget(algorithm2Button)
-
-        algorithm3Button = QPushButton("Contrast (K = 2)")
-        self.algorithmsLayout.addWidget(algorithm3Button)
 
         algorithm4Button = QPushButton("Equalization")
         algorithm4Button.clicked.connect(self.equalization)
@@ -88,6 +99,30 @@ class MainWindow(QWidget):
 
         self.algorithmsLayout.setEnabled(False)
         mainLayout.addLayout(self.algorithmsLayout)
+
+
+
+
+        self.transformationLayout = QHBoxLayout()
+
+        contrastButton = QPushButton("Contrast increment")
+        contrastButton.clicked.connect(self.contrast_transformation_clicked)
+        self.transformationLayout.addWidget(contrastButton)
+
+        thresholdButton = QPushButton("Threshold")
+        thresholdButton.clicked.connect(self.threshold_transformation_clicked)
+        self.transformationLayout.addWidget(thresholdButton)
+
+        negativeButton = QPushButton("Negative")
+        negativeButton.clicked.connect(self.negative_transformation_clicked)
+        self.transformationLayout.addWidget(negativeButton)
+
+        histogramButton = QPushButton("Grey level histogram")
+        histogramButton.clicked.connect(self.histogram_transformation_clicked)
+        self.transformationLayout.addWidget(histogramButton)
+
+        mainLayout.addLayout(self.transformationLayout)
+
 
         self.noiseLayout = QHBoxLayout()
 
@@ -109,6 +144,26 @@ class MainWindow(QWidget):
 
         mainLayout.addLayout(self.noiseLayout)
 
+        self.filterLayout = QHBoxLayout()
+
+        mean_filter_button = QPushButton("Mean filter")
+        mean_filter_button.clicked.connect(self.mean_filter_clicked)
+        self.filterLayout.addWidget(mean_filter_button)
+
+        median_filter_button = QPushButton("Median filter")
+        median_filter_button.clicked.connect(self.median_filter_clicked)
+        self.filterLayout.addWidget(median_filter_button)
+
+        ponderated_median_filter_button = QPushButton("Ponderated (3x3) median filter")
+        ponderated_median_filter_button.clicked.connect(self.ponderated_median_filter_clicked)
+        self.filterLayout.addWidget(ponderated_median_filter_button)
+
+        gaussian_filter_button = QPushButton("Gaussian filter")
+        gaussian_filter_button.clicked.connect(self.gaussian_filter_clicked)
+        self.filterLayout.addWidget(gaussian_filter_button)
+
+        mainLayout.addLayout(self.filterLayout)
+
         # ALGORITHMS
 
         # self.openFileNameDialog()
@@ -117,6 +172,22 @@ class MainWindow(QWidget):
 
         self.setLayout(mainLayout)
         self.show()
+
+    # La convierto a RGBA para mostrarla
+    def pil2pixmap(self, im):
+        if im.mode == "RGB":
+            r, g, b = im.split()
+            im = Image.merge("RGB", (b, g, r))
+        elif im.mode == "RGBA":
+            r, g, b, a = im.split()
+            im = Image.merge("RGBA", (b, g, r, a))
+        elif im.mode == "L":
+            im = im.convert("RGBA")
+        im2 = im.convert("RGBA")
+        data = im2.tobytes("raw", "RGBA")
+        qim = QImage(data, im.size[0], im.size[1], QImage.Format_ARGB32)
+        pixmap = QPixmap.fromImage(qim)
+        return pixmap
 
     def selectFileButton_clicked(self):
         options = QFileDialog.Options()
@@ -131,6 +202,7 @@ class MainWindow(QWidget):
         self.fileNameLabel.setText(os.path.basename(filePath))
         self.algorithmsLayout.setEnabled(True)
         self.image = ImageWrapper.from_path(self.selectedFilePath)
+        self.loadedImage_changed()
 
     def imageVisualizer_clicked(self):
         if self.image is not None:
@@ -195,8 +267,78 @@ class MainWindow(QWidget):
         self.imageVisualizerWindows.append(new_image_window)
         new_image_window.show()
 
+    def mean_filter_clicked(self):
+        window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
+        img_cpy = self.image.copy()
+        op.channel_mean_window(img_cpy.image_element, window_size)
+        self.show_result(img_cpy)
+
+    def median_filter_clicked(self):
+        window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
+        img_cpy = self.image.copy()
+        op.channel_mean_window(img_cpy.image_element, window_size)
+        self.show_result(img_cpy)
+
+    def gaussian_filter_clicked(self):
+        sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
+        img_cpy = self.image.copy()
+        op.channel_gaussian_window(img_cpy.image_element, sigma)
+        self.show_result(img_cpy)
+
+    def ponderated_median_filter_clicked(self):
+        img_cpy = self.image.copy()
+        op.channel_ponderated_median_window_3x3(img_cpy.image_element)
+        self.show_result(img_cpy)
+
+    def histogram_transformation_clicked(self):
+        img_cpy = self.image.copy()
+        op.channel_histogram(img_cpy.image_element, True)
+
+    def negative_transformation_clicked(self):
+        img_cpy: ImageWrapper
+        img_cpy = self.image.copy()
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_negative(channel)
+
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+
+        self.show_result(img_cpy)
+
+    def threshold_transformation_clicked(self):
+        threshold, _ = QInputDialog.getInt(self, "Select threshold", "threshold", 125)
+
+        img_cpy: ImageWrapper
+        img_cpy = self.image.copy()
+
+        op.channel_threshold(img_cpy.image_element, threshold)
+
+        self.show_result(img_cpy)
+
+    def contrast_transformation_clicked(self):
+        K, _ = QInputDialog.getInt(self, "Select K", "K", 2)
+
+        img_cpy: ImageWrapper
+        img_cpy = self.image.copy()
+
+        op.channel_contrast(img_cpy.image_element, K)
+
+        self.show_result(img_cpy)
+
+    def loadedImage_changed(self, img: ImageWrapper = None):
+        if img is not None:
+            self.image = img
+        qim = ImageQt(self.image.image_element)
+        pixmap = QPixmap.fromImage(qim)
+        pixmap = pixmap.scaledToWidth(self.width)
+        self.imageLabel.setPixmap(pixmap)
+
+    def askForInt(self, message: str, default: int):
+        intVal, _ = QInputDialog.getInt(self, message, "Enter integer value", default)
+        return intVal
 
 def main():
+    my_config.initialize()
     app = QApplication(sys.argv)
     ex = MainWindow()
     sys.exit(app.exec_())

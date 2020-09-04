@@ -7,9 +7,13 @@ from PyQt5.QtCore import *
 
 from PIL.ImageQt import ImageQt
 
+from src.main.python import my_config
+
 from src.main.python.algorithms.channel_operations import channel_threshold, channel_contrast, channel_negative, \
     channel_histogram
 from src.main.python.utils.ImageWrapper import ImageWrapper
+
+import src.main.python.algorithms.channel_operations as op
 
 class ImageSectionSelector(QWidget):
     def __init__(self, image: ImageWrapper):
@@ -20,15 +24,15 @@ class ImageSectionSelector(QWidget):
         # self.drawn_image = QPixmap(self.image.file_path)
         # self.drawn_image = QPixmap.fromImage(qim)
 
-        channels = image.image_element.split()
+        """channels = image.image_element.split()
         for channel in channels:
-            # channel_negative(channel, 150)
-            x = channel_histogram(channel, True)
+            op.channel_penderated_median_window_3x3(channel)
+            # x = channel_histogram(channel, True)"""
 
-        pil_img = Image.merge(image.image_element.mode, channels)
+        #pil_img = Image.merge(image.image_element.mode, channels)
 
-        self.drawn_image = self.pil2pixmap(pil_img)
-        # self.drawn_image = self.pil2pixmap(image.image_element)
+        #self.drawn_image = self.pil2pixmap(pil_img)
+        self.drawn_image = self.pil2pixmap(image.image_element)
 
         self.selection_start = None
         self.selection_end = None
@@ -80,6 +84,45 @@ class ImageSectionSelector(QWidget):
         if event.button() == Qt.LeftButton:
             self.drawing = True
             self.selection_start = event.pos()
+        elif event.button() == Qt.RightButton:
+            self.drawing = False
+            self.selection_start = None
+            self.selection_end = None
+            self.update()
+        elif event.button() == Qt.MiddleButton:
+
+            selection_start, selection_end = self.get_selection()
+
+            if selection_start is not None:
+                newImg = self.image.copy()
+                img = newImg.pillow_image()
+
+                bigger_x, smaller_x, bigger_y, smaller_y = 0, 0, 0, 0
+
+                if selection_start.x() >= selection_end.x():
+                    bigger_x = selection_start.x()
+                    smaller_x = selection_end.x()
+                else:
+                    bigger_x = selection_end.x()
+                    smaller_x = selection_start.x()
+
+                if selection_start.y() >= selection_end.y():
+                    bigger_y = selection_start.y()
+                    smaller_y = selection_end.y()
+                else:
+                    bigger_y = selection_end.y()
+                    smaller_y = selection_start.y()
+
+                img_left_area = (smaller_x, smaller_y, bigger_x, bigger_y)
+
+                img_left = img.crop(img_left_area)
+
+                newImg.set_pillow_image(img_left)
+
+                my_config.MainWindowSelf.loadedImage_changed(newImg)
+
+            else:
+                my_config.MainWindowSelf.loadedImage_changed(self.image)
 
     def mouseMoveEvent(self, event):
         self.curr_pointer = event.pos()
@@ -117,3 +160,8 @@ class ImageSectionSelector(QWidget):
     def subscribe_selection_finished(self, handler):
         self.handler_selection_finished = handler
     # Public methods END
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_F1:
+            my_config.MainWindowSelf.loadedImage_changed(self.image)
+

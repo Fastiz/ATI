@@ -3,14 +3,20 @@ import os
 import PIL
 from PIL import Image
 
+from src.main.python import my_config
+
 
 def is_raw(fileextension):
-    return fileextension == ".pgm" or fileextension == ".raw" or fileextension == ".RAW"
+    return fileextension == ".raw" or fileextension == ".RAW"
 
 
 def load_raw(file_path):
     image_data = open(file_path, "rb").read()
-    return Image.frombytes('L', (290, 207), image_data)
+
+    w = my_config.MainWindowSelf.askForInt("Enter image width", 250)
+    h = my_config.MainWindowSelf.askForInt("Enter image height", 250)
+
+    return Image.frombytes('L', (w, h), image_data)
 
 
 class ImageWrapper:
@@ -38,6 +44,9 @@ class ImageWrapper:
     def from_dimensions(w, h, mode='RGB'):
         return ImageWrapper(Image.new(mode, (w, h)))
 
+    def copy(self):
+        return ImageWrapper(self.image_element.copy(), self.file_path, self.filename, self.fileextension)
+
     def get_pixel(self, x, y):
         val = self.image_element.getpixel((x, y))
 
@@ -59,6 +68,9 @@ class ImageWrapper:
 
     def pillow_image(self):
         return self.image_element
+
+    def set_pillow_image(self, image: Image):
+        self.image_element = image
 
     def __is_raw(self):
         return is_raw(self.fileextension)
