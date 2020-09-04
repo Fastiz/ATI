@@ -162,6 +162,10 @@ class MainWindow(QWidget):
         gaussian_filter_button.clicked.connect(self.gaussian_filter_clicked)
         self.filterLayout.addWidget(gaussian_filter_button)
 
+        highpass_filter_button = QPushButton("Highpass filter")
+        highpass_filter_button.clicked.connect(self.highpass_filter_clicked)
+        self.filterLayout.addWidget(highpass_filter_button)
+
         mainLayout.addLayout(self.filterLayout)
 
         # ALGORITHMS
@@ -277,6 +281,12 @@ class MainWindow(QWidget):
         window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
         img_cpy = self.image.copy()
         op.channel_mean_window(img_cpy.image_element, window_size)
+        self.show_result(img_cpy)
+
+    def highpass_filter_clicked(self):
+        window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
+        img_cpy = self.image.copy()
+        op.channel_highpass_window(img_cpy.image_element, window_size)
         self.show_result(img_cpy)
 
     def gaussian_filter_clicked(self):

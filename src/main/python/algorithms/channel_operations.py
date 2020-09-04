@@ -187,7 +187,13 @@ def channel_ponderated_median_window_3x3(channel: Image):
     return channel
 
 
+def channel_highpass_window(channel: Image, window_size: int):
+    window = np.full((window_size, window_size), -1, dtype=float)
+    center = math.floor(window_size/2)
 
+    window[center][center] = (window_size**2) - 1
+
+    return channel_sliding_window(channel, window)
 
 
 
