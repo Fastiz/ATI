@@ -278,30 +278,53 @@ class MainWindow(QWidget):
     def mean_filter_clicked(self):
         window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
         img_cpy = self.image.copy()
-        op.channel_mean_window(img_cpy.image_element, window_size)
+
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_mean_window(channel, window_size)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+
         self.show_result(img_cpy)
 
     def median_filter_clicked(self):
         window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
         img_cpy = self.image.copy()
-        op.channel_mean_window(img_cpy.image_element, window_size)
+
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_median_window(channel, window_size)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+
         self.show_result(img_cpy)
 
     def highpass_filter_clicked(self):
         window_size, _ = QInputDialog.getInt(self, "Select window size", "window size", 3)
         img_cpy = self.image.copy()
-        op.channel_highpass_window(img_cpy.image_element, window_size)
+
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_highpass_window(channel, window_size)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+
         self.show_result(img_cpy)
 
     def gaussian_filter_clicked(self):
         sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
         img_cpy = self.image.copy()
-        op.channel_gaussian_window(img_cpy.image_element, sigma)
+
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_gaussian_window(channel, sigma)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+
         self.show_result(img_cpy)
 
     def ponderated_median_filter_clicked(self):
         img_cpy = self.image.copy()
-        op.channel_ponderated_median_window_3x3(img_cpy.image_element)
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_ponderated_median_window_3x3(channel)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
         self.show_result(img_cpy)
 
     def histogram_transformation_clicked(self):
@@ -311,10 +334,10 @@ class MainWindow(QWidget):
     def negative_transformation_clicked(self):
         img_cpy: ImageWrapper
         img_cpy = self.image.copy()
+
         channels = img_cpy.image_element.split()
         for channel in channels:
             op.channel_negative(channel)
-
         img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
 
         self.show_result(img_cpy)
@@ -325,7 +348,10 @@ class MainWindow(QWidget):
         img_cpy: ImageWrapper
         img_cpy = self.image.copy()
 
-        op.channel_threshold(img_cpy.image_element, threshold)
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_threshold(channel, threshold)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
 
         self.show_result(img_cpy)
 
@@ -334,6 +360,11 @@ class MainWindow(QWidget):
 
         img_cpy: ImageWrapper
         img_cpy = self.image.copy()
+
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            op.channel_contrast(channel, K)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
 
         op.channel_contrast(img_cpy.image_element, K)
 
