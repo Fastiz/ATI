@@ -238,23 +238,27 @@ class MainWindow(QWidget):
     def gaussian_noise_clicked(self):
         mu, _ = QInputDialog.getDouble(self, "Select mu (expected value)", "mu", 0)
         sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
-        result = gaussian_additive_noise(self.image, mu, sigma)
+        percentage, _ = QInputDialog.getDouble(self, "Contamination percentage", "percentage", 1)
+        result = gaussian_additive_noise(self.image, mu, sigma, percentage)
         self.show_result(result)
 
     def rayleigh_noise_clicked(self):
         gamma, _ = QInputDialog.getDouble(self, "Select gamma (expected value)", "gamma", 0)
-        result = rayleigh_multiplicative_noise(self.image, 1)
+        percentage, _ = QInputDialog.getDouble(self, "Contamination percentage", "percentage", 1)
+        result = rayleigh_multiplicative_noise(self.image, 1, percentage)
         self.show_result(result)
 
     def exponential_noise_clicked(self):
         _lambda, _ = QInputDialog.getDouble(self, "Select lambda", "lambda", 1)
-        result = exponential_multiplicative_noise(self.image, _lambda)
+        percentage, _ = QInputDialog.getDouble(self, "Contamination percentage", "percentage", 1)
+        result = exponential_multiplicative_noise(self.image, _lambda, percentage)
         self.show_result(result)
 
     def salt_and_pepper_clicked(self):
         p0, _ = QInputDialog.getDouble(self, "p0", "p0", 0.1)
         p1, _ = QInputDialog.getDouble(self, "p1", "p1", 0.9)
-        result = salt_and_pepper(self.image, p0, p1)
+        percentage, _ = QInputDialog.getDouble(self, "Contamination percentage", "percentage", 1)
+        result = salt_and_pepper(self.image, p0, p1, percentage)
         self.show_result(result)
 
     def dynamic_range_compression_clicked(self):
