@@ -1,5 +1,9 @@
+import os
+
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog, QInputDialog
+
+from src.main.python.utils.ImageWrapper import is_raw
 
 
 class MultipleImageSelector(QWidget):
@@ -9,7 +13,6 @@ class MultipleImageSelector(QWidget):
         self.requirements = [True for i in range(len(options_txt))] if requirements is None else requirements
 
         self.handler = handler
-
         self.paths = [None for i in range(len(options_txt))]
         self.paths_labels = []
 
@@ -63,6 +66,7 @@ class MultipleImageSelector(QWidget):
             file_path, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
                                                        "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
             if file_path:
+
                 self.paths[path_index] = file_path
                 self.paths_labels[path_index].setText(file_path)
 

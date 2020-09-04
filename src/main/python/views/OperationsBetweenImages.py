@@ -69,7 +69,9 @@ class OperationsBetweenImages(QWidget):
         self.set_enabled_operations(False)
 
     def select_images(self):
-        def handler(paths):
+        def handler(paths, dimensions=None):
+            if dimensions is None:
+                dimensions = [None, None]
             self.first_image = ImageWrapper.from_path(paths[0])
             self.second_image = ImageWrapper.from_path(paths[1])
             self.set_enabled_operations(True)

@@ -16,7 +16,7 @@ from src.main.python.algorithms.operations_between_images import equalize_histog
     gamma_power_function
 from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.components.MultipleImageSelector import MultipleImageSelector
-from src.main.python.utils.ImageWrapper import ImageWrapper
+from src.main.python.utils.ImageWrapper import ImageWrapper, is_raw
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
 
 import src.main.python.algorithms.channel_operations as op

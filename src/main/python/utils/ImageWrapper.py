@@ -13,8 +13,8 @@ def is_raw(fileextension):
 def load_raw(file_path):
     image_data = open(file_path, "rb").read()
 
-    w = my_config.MainWindowSelf.askForInt("Enter image width", 250)
-    h = my_config.MainWindowSelf.askForInt("Enter image height", 250)
+    w = my_config.MainWindowSelf.askForInt("Enter image width", 256)
+    h = my_config.MainWindowSelf.askForInt("Enter image height", 256)
 
     return Image.frombytes('L', (w, h), image_data)
 
@@ -42,6 +42,7 @@ class ImageWrapper:
 
     @staticmethod
     def from_dimensions(w, h, mode='RGB'):
+        mode = 'RGB' if mode is None else mode
         return ImageWrapper(Image.new(mode, (w, h)))
 
     def copy(self):
@@ -55,7 +56,7 @@ class ImageWrapper:
         return val
 
     def set_pixel(self, x, y, value):
-        return self.image_element.putpixel((x, y), value)
+        return self.image_element.putpixel((x, y), value if len(value) > 1 else value[0])
 
     def dimensions(self):
         return self.image_element.size

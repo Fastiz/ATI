@@ -6,25 +6,24 @@ from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
 def product(first_image: ImageWrapper, second_image: ImageWrapper):
-    return pixel_to_pixel_operation(first_image, second_image, lambda a, b: (a * b) % 255)
+    return pixel_to_pixel_operation(first_image, second_image, lambda a, b: (a * b))
 
 
 def subtraction(first_image: ImageWrapper, second_image: ImageWrapper):
-    return pixel_to_pixel_operation(first_image, second_image, lambda a, b: abs((a - b) % 255))
+    return pixel_to_pixel_operation(first_image, second_image, lambda a, b: abs((a - b)))
 
 
 def addition(first_image: ImageWrapper, second_image: ImageWrapper):
-    return pixel_to_pixel_operation(first_image, second_image, lambda a, b: (a + b) % 255)
+    return pixel_to_pixel_operation(first_image, second_image, lambda a, b: (a + b))
 
 
 def scalar_multiplication(first_image: ImageWrapper, scalar: float):
     w, h = first_image.dimensions()
 
-    result = ImageWrapper.from_dimensions(w, h)
+    result = ImageWrapper.from_dimensions(w, h, mode=first_image.get_mode())
 
     for x in range(w):
         for y in range(h):
-            pixel = first_image.get_pixel(x, y)
             val = [int(first_image.get_pixel(x, y)[i] * scalar) % 255 for i in range(len(first_image.get_pixel(x, y)))]
             result.set_pixel(x, y, tuple(val))
 
@@ -82,7 +81,7 @@ def pixel_to_pixel_operation(first_image: ImageWrapper, second_image: ImageWrapp
             row.append(tuple(val))
         matrix.append(row)
 
-    return matrix_to_image(normalized_matrix(matrix))
+    return matrix_to_image(normalized_matrix(matrix), mode=first_image.get_mode())
 
 
 def pixel_transformation(image: ImageWrapper, transformation_function):
