@@ -138,11 +138,20 @@ def channel_gaussian_window(channel: Image, sigma: float):
     window_border_offset = math.floor(window_size / 2)
     window = np.full((window_size, window_size), 0, dtype=float)
 
+
+
+
+
     factor = 1/(2*math.pi*sigma*sigma)
     exp_factor = -1/(sigma*sigma)
     for i in range(-window_border_offset, window_border_offset + 1):
         for j in range(-window_border_offset, window_border_offset + 1):
             window[i+window_border_offset][j+window_border_offset] = factor * math.exp(exp_factor * ((i**2) + (j**2)))
+
+    sum = window.sum()
+    for row in window:
+        for i in range(len(row)):
+            row[i] /= sum
 
     return channel_sliding_window(channel, window)
 
