@@ -68,7 +68,7 @@ def salt_and_pepper(image: ImageWrapper, p0: float, p1: float, percentage: float
             if rnd < p0:
                 res.append(0)
             elif rnd > p1:
-                res.append(1)
+                res.append(255)
             else:
                 res.append(v)
 
