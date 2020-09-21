@@ -58,39 +58,45 @@ class MainWindow(QWidget):
         imagePreviewAndDataLayout.addWidget(self.imageLabel)
 
         imageDataLayout = QVBoxLayout()
-        imageDataLayout.setAlignment(Qt.AlignTop)
+
+        imageLabelDataLayout = QVBoxLayout()
+        imageLabelDataLayout.setAlignment(Qt.AlignTop)
 
         fileLabelLayout = QHBoxLayout()
         fileLabelLayout.addWidget(QLabel("File name: ", objectName='title', alignment=Qt.AlignLeft))
         self.fileNameLabel = QLabel("None", alignment=Qt.AlignRight)
         fileLabelLayout.addWidget(self.fileNameLabel)
-        imageDataLayout.addLayout(fileLabelLayout)
+        imageLabelDataLayout.addLayout(fileLabelLayout)
 
         fileDirLayout = QHBoxLayout()
         fileDirLayout.addWidget(QLabel("File path: ", objectName='title', alignment=Qt.AlignLeft))
         self.filePathLabel = QLabel("None", alignment=Qt.AlignRight)
         fileDirLayout.addWidget(self.filePathLabel)
-        imageDataLayout.addLayout(fileDirLayout)
+        imageLabelDataLayout.addLayout(fileDirLayout)
 
         fileHeightLayout = QHBoxLayout()
         fileHeightLayout.addWidget(QLabel("Height: ", objectName='title', alignment=Qt.AlignLeft))
         self.fileHeightLabel = QLabel("None", alignment=Qt.AlignRight)
         fileHeightLayout.addWidget(self.fileHeightLabel)
-        imageDataLayout.addLayout(fileHeightLayout)
+        imageLabelDataLayout.addLayout(fileHeightLayout)
 
         fileWidthLayout = QHBoxLayout()
         fileWidthLayout.addWidget(QLabel("Width: ", objectName='title', alignment=Qt.AlignLeft))
         self.fileWidthLabel = QLabel("None", alignment=Qt.AlignRight)
         fileWidthLayout.addWidget(self.fileWidthLabel)
-        imageDataLayout.addLayout(fileWidthLayout)
+        imageLabelDataLayout.addLayout(fileWidthLayout)
 
         fileLayersLayout = QHBoxLayout()
         fileLayersLayout.addWidget(QLabel("Number of channels: ", objectName='title', alignment=Qt.AlignLeft))
         self.fileLayersLabel = QLabel("None", alignment=Qt.AlignRight)
         fileLayersLayout.addWidget(self.fileLayersLabel)
-        imageDataLayout.addLayout(fileLayersLayout)
+        imageLabelDataLayout.addLayout(fileLayersLayout)
+
+        imageDataLayout.addLayout(imageLabelDataLayout)
 
         fileActionsLayout = QVBoxLayout()
+        fileActionsLayout.setAlignment(Qt.AlignBottom)
+
         fileActionsLayout.setAlignment(Qt.AlignBottom)
         fileActionsLayout.addWidget(QPushButton("Change selected file", clicked=self.selectFileButton_clicked))
         fileActionsLayout.addWidget(QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
