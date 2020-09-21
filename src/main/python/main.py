@@ -1,4 +1,3 @@
-import os
 import sys
 
 from PIL import Image
@@ -7,7 +6,9 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QPushButton, QInputDialog, QTabWidget, QGridLayout
+    QLabel, QPushButton, QInputDialog, QTabWidget
+
+import src.main.python.algorithms.border_detection as bd
 
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
@@ -19,6 +20,7 @@ from src.main.python.utils.ImageWrapper import ImageWrapper, is_raw
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
 
 import src.main.python.algorithms.channel_operations as op
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -54,7 +56,8 @@ class MainWindow(QWidget):
 
         self.imageLabel = QLabel(alignment=(Qt.AlignVCenter | Qt.AlignHCenter))
         self.imageLabel.setFixedSize(600, 500)
-        self.imageLabel.setStyleSheet("QLabel { border-style: solid; border-width: 2px; border-color: rgba(0, 0, 0, 0.1); }");
+        self.imageLabel.setStyleSheet(
+            "QLabel { border-style: solid; border-width: 2px; border-color: rgba(0, 0, 0, 0.1); }");
         imagePreviewAndDataLayout.addWidget(self.imageLabel)
 
         imageDataLayout = QVBoxLayout()
@@ -99,13 +102,13 @@ class MainWindow(QWidget):
 
         fileActionsLayout.setAlignment(Qt.AlignBottom)
         fileActionsLayout.addWidget(QPushButton("Change selected file", clicked=self.selectFileButton_clicked))
-        fileActionsLayout.addWidget(QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
+        fileActionsLayout.addWidget(
+            QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
         fileActionsLayout.addWidget(QPushButton("Open in OS image viewer", clicked=self.open_file_clicked))
         fileActionsLayout.addWidget(QPushButton("Grey level histogram", clicked=self.histogram_transformation_clicked))
         imageDataLayout.addLayout(fileActionsLayout)
 
         imagePreviewAndDataLayout.addLayout(imageDataLayout)
-
 
         mainLayout.addLayout(imagePreviewAndDataLayout)
         # SELECT FILE
@@ -116,6 +119,7 @@ class MainWindow(QWidget):
         transformationTab = QWidget()
         noiseTab = QWidget()
         filterTab = QWidget()
+        borderDetectionTab = QWidget()
 
         algorithmsLayout = QHBoxLayout()
 
@@ -208,9 +212,27 @@ class MainWindow(QWidget):
         # mainLayout.addLayout(filterLayout)
         filterTab.setLayout(filterLayout)
         self.tabLayout.addTab(filterTab, "Filters")
+
+
+
+
+
+
+
+
+        # Border detection
+        borderDetectionLayout = QHBoxLayout()
+
+        borderDetectionLayout.addWidget(QPushButton("Prewitt", clicked=self.prewitt_border_detection_clicked))
+        borderDetectionLayout.addWidget(QPushButton("Sobel", clicked=self.sobel_border_detection_clicked))
+
+        borderDetectionTab.setLayout(borderDetectionLayout)
+        self.tabLayout.addTab(borderDetectionTab, "Border detection")
+
+
+
         # ALGORITHMS
 
-        self.tabLayout.setEnabled(False)
         mainLayout.addWidget(self.tabLayout)
 
         self.setLayout(mainLayout)
@@ -259,7 +281,6 @@ class MainWindow(QWidget):
         pixmap = QPixmap.fromImage(qim).scaled(self.imageLabel.width(), self.imageLabel.height(),
                                                QtCore.Qt.KeepAspectRatio)
         self.imageLabel.setPixmap(pixmap)
-        self.tabLayout.setEnabled(True)
 
     def imageVisualizer_clicked(self):
         if self.image is not None:
@@ -427,13 +448,29 @@ class MainWindow(QWidget):
         intVal, _ = QInputDialog.getInt(self, message, "Enter integer value", default)
         return intVal
 
+    def prewitt_border_detection_clicked(self):
+        img_cpy = self.image.copy()
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            bd.prewitt_border_detection(channel)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+        self.show_result(img_cpy)
+
+    def sobel_border_detection_clicked(self):
+        img_cpy = self.image.copy()
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            bd.sobel_border_detection(channel)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+        self.show_result(img_cpy)
+
 
 def main():
     my_config.initialize()
     app = QApplication(sys.argv)
     ex = MainWindow()
 
-    #Force load file
+    # Force load file
     if not ex.selectFileButton_clicked():
         return
 

@@ -3,6 +3,8 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
+import src.main.python.algorithms.border_detection as bd
+
 def channel_mean(channel: Image):
     h, w = channel.size
 
