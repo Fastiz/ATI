@@ -88,15 +88,25 @@ def laplace_border_detection(channel: Image):
             channel_matrix[x, y] = apply_mask(channel_cpy, x, y, laplace_mask)
 
     for x in range(w):
+        for y in range(h):
+            channel.putpixel((x, y), 0)
+
+    for x in range(w):
         for y in range(h - 1):
-            if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
-                channel.putpixel((x, y), 255)
+            if channel_matrix[x, y] == 0:
+                if y - 1 >= 0 and np.sign(channel_matrix[x, y-1]) != np.sign(channel_matrix[x, y+1]):
+                    channel.putpixel((x, y), 255)
             else:
-                channel.putpixel((x, y), 0)
+                if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
+                    channel.putpixel((x, y), 255)
 
     for y in range(h):
         for x in range(w - 1):
-            if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
-                channel.putpixel((x, y), 255)
+            if channel_matrix[x, y] == 0:
+                if x - 1 >= 0 and np.sign(channel_matrix[x-1, y]) != np.sign(channel_matrix[x+1, y]):
+                    channel.putpixel((x, y), 255)
+            else:
+                if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
+                    channel.putpixel((x, y), 255)
 
     return channel
