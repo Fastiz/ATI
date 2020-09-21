@@ -13,7 +13,7 @@ def apply_mask(channel: Image, x: int, y: int, mask: np.array):
     for i in range(-mask_border_offset, mask_border_offset + 1):
         for j in range(-mask_border_offset, mask_border_offset + 1):
             if 0 <= x + i < w and 0 <= y + j < h:
-                acum += mask[i + mask_border_offset][j + mask_border_offset] * channel.getpixel((x+i, y + j))
+                acum += mask[i + mask_border_offset][j + mask_border_offset] * channel.getpixel((x + i, y + j))
 
     return acum
 
@@ -70,42 +70,33 @@ def sobel_border_detection(channel: Image):
     return channel
 
 
-def asd(channel: Image):
+def laplace_border_detection(channel: Image):
     w, h = channel.size
 
-    matrix = np.asarray(channel)
+    channel_cpy = channel.copy()
 
-    gx = np.array(([-1, 0, 1],
-                           [-1, 0, 1],
-                           [-1, 0, 1]))
-    gy = np.array(([-1, -1, -1],
-                           [0, 0, 0],
-                           [1, 1, 1]))
-    for y in range(2, h - 2):
+    channel_matrix = np.asarray(channel).copy()
 
-        for x in range(2, w - 2):
-            r_gx, r_gy = 0, 0
-            for kernel_offset_y in range(-1, 1 + 1):
+    laplace_mask = np.array([
+        [0, -1, 0],
+        [-1, 4, -1],
+        [0, -1, 0]
+    ])
 
-                for kernel_offset_x in range(-1, 1 + 1):
+    for x in range(w):
+        for y in range(h):
+            channel_matrix[x, y] = apply_mask(channel_cpy, x, y, laplace_mask)
 
-                    xx = x + kernel_offset_x
-                    yy = y + kernel_offset_y
-                    color = matrix[xx, yy]
-                    # print(kernel_offset_y, kernel_offset_x)
-                    if kernel_offset_x != 0:
-                        k = gx[kernel_offset_x + 1,
-                                    kernel_offset_y + 1]
-                        r_gx += color[0] * k
+    for x in range(w):
+        for y in range(h - 1):
+            if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
+                channel.putpixel((x, y), 255)
+            else:
+                channel.putpixel((x, y), 0)
 
-                    if kernel_offset_y != 0:
-                        k = gy[kernel_offset_x + 1,
-                                    kernel_offset_y + 1]
-                        r_gy += color[0] * k
+    for y in range(h):
+        for x in range(w - 1):
+            if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
+                channel.putpixel((x, y), 255)
 
-            magnitude = math.sqrt(r_gx ** 2 + r_gy ** 2)
-            # update the pixel if the magnitude is above threshold else black pixel
-            matrix[x, y] = magnitude if magnitude > 0 else 0
-        # cap the values
-    np.putmask(matrix, matrix > 255, 255)
-    np.putmask(matrix, matrix < 0, 0)
+    return channel

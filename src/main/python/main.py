@@ -225,6 +225,7 @@ class MainWindow(QWidget):
 
         borderDetectionLayout.addWidget(QPushButton("Prewitt", clicked=self.prewitt_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Sobel", clicked=self.sobel_border_detection_clicked))
+        borderDetectionLayout.addWidget(QPushButton("Laplace", clicked=self.laplace_border_detection_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
@@ -461,6 +462,14 @@ class MainWindow(QWidget):
         channels = img_cpy.image_element.split()
         for channel in channels:
             bd.sobel_border_detection(channel)
+        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+        self.show_result(img_cpy)
+
+    def laplace_border_detection_clicked(self):
+        img_cpy = self.image.copy()
+        channels = img_cpy.image_element.split()
+        for channel in channels:
+            bd.laplace_border_detection(channel)
         img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
         self.show_result(img_cpy)
 
