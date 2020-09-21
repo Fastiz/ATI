@@ -26,6 +26,8 @@ class ImageWrapper:
         self.filename = filename
         self.fileextension = fileextension
 
+
+
     @staticmethod
     def from_path(file_path):
         file_path = file_path

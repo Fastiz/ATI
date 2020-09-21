@@ -3,10 +3,11 @@ import sys
 
 from PIL import Image
 from PIL.ImageQt import ImageQt
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QPushButton, QInputDialog
+    QLabel, QPushButton, QInputDialog, QTabWidget, QGridLayout
 
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
@@ -14,13 +15,10 @@ from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayl
     exponential_multiplicative_noise, salt_and_pepper
 from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression, \
     gamma_power_function
-from src.main.python.components.ImageSectionSelector import ImageSectionSelector
-from src.main.python.components.MultipleImageSelector import MultipleImageSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper, is_raw
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
 
 import src.main.python.algorithms.channel_operations as op
-
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -31,9 +29,7 @@ class MainWindow(QWidget):
         self.width = 640
         self.height = 480
         self.initUI()
-        self.noiseLayout = None
 
-        self.selectedFilePath = ""
         self.image = None
 
         self.imageVisualizerWindows = []
@@ -44,138 +40,178 @@ class MainWindow(QWidget):
         my_config.MainWindowSelf = self
 
     def initUI(self):
+        with open("../css/style.css") as f:
+            self.setStyleSheet(f.read())
+
         self.setWindowTitle(self.title)
         # self.setGeometry(self.left, self.top, self.width, self.height)
 
         mainLayout = QVBoxLayout()
 
         # SELECT FILE
-        selectedFileLayout = QVBoxLayout()
+
+        imagePreviewAndDataLayout = QHBoxLayout()
+
+        self.imageLabel = QLabel(alignment=(Qt.AlignVCenter | Qt.AlignHCenter))
+        self.imageLabel.setFixedSize(600, 500)
+        self.imageLabel.setStyleSheet("QLabel { border-style: solid; border-width: 2px; border-color: rgba(0, 0, 0, 0.1); }");
+        imagePreviewAndDataLayout.addWidget(self.imageLabel)
+
+        imageDataLayout = QVBoxLayout()
+        imageDataLayout.setAlignment(Qt.AlignTop)
 
         fileLabelLayout = QHBoxLayout()
-        fileLabelLayout.addWidget(QLabel("Selected file: "))
-        self.fileNameLabel = QLabel("None")
-        self.fileNameLabel.setAlignment(Qt.AlignRight)
+        fileLabelLayout.addWidget(QLabel("File name: ", objectName='title', alignment=Qt.AlignLeft))
+        self.fileNameLabel = QLabel("None", alignment=Qt.AlignRight)
         fileLabelLayout.addWidget(self.fileNameLabel)
+        imageDataLayout.addLayout(fileLabelLayout)
 
-        selectedFileLayout.addLayout(fileLabelLayout)
+        fileDirLayout = QHBoxLayout()
+        fileDirLayout.addWidget(QLabel("File path: ", objectName='title', alignment=Qt.AlignLeft))
+        self.filePathLabel = QLabel("None", alignment=Qt.AlignRight)
+        fileDirLayout.addWidget(self.filePathLabel)
+        imageDataLayout.addLayout(fileDirLayout)
 
-        selectFileButton = QPushButton("Select from filesystem")
-        selectFileButton.clicked.connect(self.selectFileButton_clicked)
+        fileHeightLayout = QHBoxLayout()
+        fileHeightLayout.addWidget(QLabel("Height: ", objectName='title', alignment=Qt.AlignLeft))
+        self.fileHeightLabel = QLabel("None", alignment=Qt.AlignRight)
+        fileHeightLayout.addWidget(self.fileHeightLabel)
+        imageDataLayout.addLayout(fileHeightLayout)
 
-        selectedFileLayout.addWidget(selectFileButton)
+        fileWidthLayout = QHBoxLayout()
+        fileWidthLayout.addWidget(QLabel("Width: ", objectName='title', alignment=Qt.AlignLeft))
+        self.fileWidthLabel = QLabel("None", alignment=Qt.AlignRight)
+        fileWidthLayout.addWidget(self.fileWidthLabel)
+        imageDataLayout.addLayout(fileWidthLayout)
 
-        self.imageLabel = QLabel()
-        """pixmap = QPixmap.fromImage(self.image.image_element)
-        pixmap = pixmap.scaledToWidth(20)
-        self.imageLabel.setPixmap(pixmap)"""
-        selectedFileLayout.addWidget(self.imageLabel)
+        fileLayersLayout = QHBoxLayout()
+        fileLayersLayout.addWidget(QLabel("Number of channels: ", objectName='title', alignment=Qt.AlignLeft))
+        self.fileLayersLabel = QLabel("None", alignment=Qt.AlignRight)
+        fileLayersLayout.addWidget(self.fileLayersLabel)
+        imageDataLayout.addLayout(fileLayersLayout)
 
-        mainLayout.addLayout(selectedFileLayout)
+        fileActionsLayout = QVBoxLayout()
+        fileActionsLayout.setAlignment(Qt.AlignBottom)
+        fileActionsLayout.addWidget(QPushButton("Change selected file", clicked=self.selectFileButton_clicked))
+        fileActionsLayout.addWidget(QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
+        fileActionsLayout.addWidget(QPushButton("Open in OS image viewer", clicked=self.open_file_clicked))
+        fileActionsLayout.addWidget(QPushButton("Grey level histogram", clicked=self.histogram_transformation_clicked))
+        imageDataLayout.addLayout(fileActionsLayout)
+
+        imagePreviewAndDataLayout.addLayout(imageDataLayout)
+
+
+        mainLayout.addLayout(imagePreviewAndDataLayout)
         # SELECT FILE
 
         # ALGORITHMS
-        self.algorithmsLayout = QHBoxLayout()
+        self.tabLayout = QTabWidget()
+        pointOperationTab = QWidget()
+        transformationTab = QWidget()
+        noiseTab = QWidget()
+        filterTab = QWidget()
 
-        algorithm1Button = QPushButton("Visualize selected image")
-        algorithm1Button.clicked.connect(self.imageVisualizer_clicked)
-        self.algorithmsLayout.addWidget(algorithm1Button)
+        algorithmsLayout = QHBoxLayout()
 
         algorithm2Button = QPushButton("Operations between Images")
         algorithm2Button.clicked.connect(self.operation_between_images)
-        self.algorithmsLayout.addWidget(algorithm2Button)
+        algorithmsLayout.addWidget(algorithm2Button)
 
         algorithm4Button = QPushButton("Equalization")
         algorithm4Button.clicked.connect(self.equalization)
-        self.algorithmsLayout.addWidget(algorithm4Button)
+        algorithmsLayout.addWidget(algorithm4Button)
 
         algorithm5Button = QPushButton("Dynamic range compression")
         algorithm5Button.clicked.connect(self.dynamic_range_compression_clicked)
-        self.algorithmsLayout.addWidget(algorithm5Button)
+        algorithmsLayout.addWidget(algorithm5Button)
 
         algorithm6Button = QPushButton("Gamma power function")
         algorithm6Button.clicked.connect(self.gamma_power_function_clicked)
-        self.algorithmsLayout.addWidget(algorithm6Button)
+        algorithmsLayout.addWidget(algorithm6Button)
 
-        self.algorithmsLayout.setEnabled(False)
-        mainLayout.addLayout(self.algorithmsLayout)
+        # algorithmsLayout.setEnabled(False)
+        # mainLayout.addLayout(algorithmsLayout)
+        pointOperationTab.setLayout(algorithmsLayout)
+        self.tabLayout.addTab(pointOperationTab, "Point operations")
 
-
-
-
-        self.transformationLayout = QHBoxLayout()
+        # TRANSFORMATIONS
+        transformationLayoutt = QHBoxLayout()
 
         contrastButton = QPushButton("Contrast increment")
         contrastButton.clicked.connect(self.contrast_transformation_clicked)
-        self.transformationLayout.addWidget(contrastButton)
+        transformationLayoutt.addWidget(contrastButton)
 
         thresholdButton = QPushButton("Threshold")
         thresholdButton.clicked.connect(self.threshold_transformation_clicked)
-        self.transformationLayout.addWidget(thresholdButton)
+        transformationLayoutt.addWidget(thresholdButton)
 
         negativeButton = QPushButton("Negative")
         negativeButton.clicked.connect(self.negative_transformation_clicked)
-        self.transformationLayout.addWidget(negativeButton)
+        transformationLayoutt.addWidget(negativeButton)
 
-        histogramButton = QPushButton("Grey level histogram")
-        histogramButton.clicked.connect(self.histogram_transformation_clicked)
-        self.transformationLayout.addWidget(histogramButton)
+        # mainLayout.addLayout(transformationLayoutt)
+        transformationTab.setLayout(transformationLayoutt)
+        self.tabLayout.addTab(transformationTab, "Transformations")
 
-        mainLayout.addLayout(self.transformationLayout)
-
-
-        self.noiseLayout = QHBoxLayout()
+        # Noises
+        noiseLayout = QHBoxLayout()
 
         gaussian_button = QPushButton("Gaussian additive noise")
         gaussian_button.clicked.connect(self.gaussian_noise_clicked)
-        self.noiseLayout.addWidget(gaussian_button)
+        noiseLayout.addWidget(gaussian_button)
 
         rayleigh_button = QPushButton("Rayleigh multiplicative noise")
         rayleigh_button.clicked.connect(self.rayleigh_noise_clicked)
-        self.noiseLayout.addWidget(rayleigh_button)
+        noiseLayout.addWidget(rayleigh_button)
 
         exponential_button = QPushButton("Exponential additive noise")
         exponential_button.clicked.connect(self.exponential_noise_clicked)
-        self.noiseLayout.addWidget(exponential_button)
+        noiseLayout.addWidget(exponential_button)
 
         salt_and_pepper_button = QPushButton("Salt and pepper noise")
         salt_and_pepper_button.clicked.connect(self.salt_and_pepper_clicked)
-        self.noiseLayout.addWidget(salt_and_pepper_button)
+        noiseLayout.addWidget(salt_and_pepper_button)
 
-        mainLayout.addLayout(self.noiseLayout)
+        # mainLayout.addLayout(noiseLayout)
+        noiseTab.setLayout(noiseLayout)
+        self.tabLayout.addTab(noiseTab, "Noises")
 
-        self.filterLayout = QHBoxLayout()
+        # Filters
+        filterLayout = QHBoxLayout()
 
         mean_filter_button = QPushButton("Mean filter")
         mean_filter_button.clicked.connect(self.mean_filter_clicked)
-        self.filterLayout.addWidget(mean_filter_button)
+        filterLayout.addWidget(mean_filter_button)
 
         median_filter_button = QPushButton("Median filter")
         median_filter_button.clicked.connect(self.median_filter_clicked)
-        self.filterLayout.addWidget(median_filter_button)
+        filterLayout.addWidget(median_filter_button)
 
         ponderated_median_filter_button = QPushButton("Ponderated (3x3) median filter")
         ponderated_median_filter_button.clicked.connect(self.ponderated_median_filter_clicked)
-        self.filterLayout.addWidget(ponderated_median_filter_button)
+        filterLayout.addWidget(ponderated_median_filter_button)
 
         gaussian_filter_button = QPushButton("Gaussian filter")
         gaussian_filter_button.clicked.connect(self.gaussian_filter_clicked)
-        self.filterLayout.addWidget(gaussian_filter_button)
+        filterLayout.addWidget(gaussian_filter_button)
 
         highpass_filter_button = QPushButton("Highpass filter")
         highpass_filter_button.clicked.connect(self.highpass_filter_clicked)
-        self.filterLayout.addWidget(highpass_filter_button)
+        filterLayout.addWidget(highpass_filter_button)
 
-        mainLayout.addLayout(self.filterLayout)
-
+        # mainLayout.addLayout(filterLayout)
+        filterTab.setLayout(filterLayout)
+        self.tabLayout.addTab(filterTab, "Filters")
         # ALGORITHMS
 
-        # self.openFileNameDialog()
-        # self.openFileNamesDialog()
-        # self.saveFileDialog()
+        self.tabLayout.setEnabled(False)
+        mainLayout.addWidget(self.tabLayout)
 
         self.setLayout(mainLayout)
         self.show()
+
+    def open_file_clicked(self):
+        self.image.image_element.show()
 
     # La convierto a RGBA para mostrarla
     def pil2pixmap(self, im):
@@ -195,18 +231,29 @@ class MainWindow(QWidget):
 
     def selectFileButton_clicked(self):
         options = QFileDialog.Options()
-        # options |= QFileDialog.DontUseNativeDialog
         filePath, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
                                                   "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
         if filePath:
-            self.selectedFile_changed(filePath)
+            self.loadedImage_changed(ImageWrapper.from_path(filePath))
+            return True
 
-    def selectedFile_changed(self, filePath):
-        self.selectedFilePath = filePath
-        self.fileNameLabel.setText(os.path.basename(filePath))
-        self.algorithmsLayout.setEnabled(True)
-        self.image = ImageWrapper.from_path(self.selectedFilePath)
-        self.loadedImage_changed()
+        return False
+
+    def loadedImage_changed(self, img: ImageWrapper = None):
+        if img is not None:
+            self.image = img
+
+            self.fileWidthLabel.setText(str(img.image_element.width))
+            self.fileHeightLabel.setText(str(img.image_element.height))
+            self.fileNameLabel.setText(img.filename)
+            self.filePathLabel.setText(img.file_path)
+            self.fileLayersLabel.setText(str(len(img.image_element.getbands())))
+
+        qim = ImageQt(self.image.image_element)
+        pixmap = QPixmap.fromImage(qim).scaled(self.imageLabel.width(), self.imageLabel.height(),
+                                               QtCore.Qt.KeepAspectRatio)
+        self.imageLabel.setPixmap(pixmap)
+        self.tabLayout.setEnabled(True)
 
     def imageVisualizer_clicked(self):
         if self.image is not None:
@@ -370,22 +417,20 @@ class MainWindow(QWidget):
 
         self.show_result(img_cpy)
 
-    def loadedImage_changed(self, img: ImageWrapper = None):
-        if img is not None:
-            self.image = img
-        qim = ImageQt(self.image.image_element)
-        pixmap = QPixmap.fromImage(qim)
-        pixmap = pixmap.scaledToWidth(self.width)
-        self.imageLabel.setPixmap(pixmap)
-
     def askForInt(self, message: str, default: int):
         intVal, _ = QInputDialog.getInt(self, message, "Enter integer value", default)
         return intVal
+
 
 def main():
     my_config.initialize()
     app = QApplication(sys.argv)
     ex = MainWindow()
+
+    #Force load file
+    if not ex.selectFileButton_clicked():
+        return
+
     sys.exit(app.exec_())
 
 
