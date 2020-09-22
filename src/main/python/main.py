@@ -12,6 +12,7 @@ import src.main.python.algorithms.border_detection as bd
 
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
+from src.main.python.algorithms.diffusion import isotropic_diffusion_step
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
 from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression, \
@@ -208,6 +209,14 @@ class MainWindow(QWidget):
         highpass_filter_button = QPushButton("Highpass filter")
         highpass_filter_button.clicked.connect(self.highpass_filter_clicked)
         filterLayout.addWidget(highpass_filter_button)
+
+        isotropic_filter_button = QPushButton("Isotropic diffusion")
+        isotropic_filter_button.clicked.connect(self.isotropic_diffusion_method_clicked)
+        filterLayout.addWidget(isotropic_filter_button)
+
+        anisotropic_filter_button = QPushButton("Anisotropic diffusion")
+        anisotropic_filter_button.clicked.connect(self.anisotropic_diffusion_method_clicked)
+        filterLayout.addWidget(anisotropic_filter_button)
 
         # mainLayout.addLayout(filterLayout)
         filterTab.setLayout(filterLayout)
@@ -473,6 +482,20 @@ class MainWindow(QWidget):
             bd.laplace_border_detection(channel)
         img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
         self.show_result(img_cpy)
+        
+    def isotropic_diffusion_method_clicked(self):
+        number_of_steps, _ = QInputDialog.getInt(self, "Select number of steps", "Steps", 5)
+        diffused_image = self.image
+        for i in range(number_of_steps):
+            diffused_image = isotropic_diffusion_step(self.image)
+        self.show_result(diffused_image)
+
+    def anisotropic_diffusion_method_clicked(self):
+        number_of_steps, _ = QInputDialog.getInt(self, "Select number of steps", "Steps", 5)
+        diffused_image = self.image
+        for i in range(number_of_steps):
+            diffused_image = isotropic_diffusion_step(self.image)
+        self.show_result(diffused_image)
 
 
 def main():
