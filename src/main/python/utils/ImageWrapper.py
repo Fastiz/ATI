@@ -1,5 +1,7 @@
 import os
+from typing import List
 
+import numpy as np
 import PIL
 from PIL import Image
 
@@ -20,13 +22,23 @@ def load_raw(file_path):
 
 
 class ImageWrapper:
-    def __init__(self, image: PIL.Image.Image, file_path=None, filename=None, fileextension=None):
+    memory_only: bool
+    file_path: str
+    filename: str
+    fileextension: str
+    channels: List[np.array]
+    mode: str
+
+    def __init__(self, image: PIL.Image.Image, file_path=None, filename=None, fileextension=None,
+                 memory_only: bool = False):
+        self.memory_only = memory_only
         self.image_element = image
         self.file_path = file_path
         self.filename = filename
         self.fileextension = fileextension
+        self.mode = self.image_element.mode
 
-
+        self.set_pillow_image(image)
 
     @staticmethod
     def from_path(file_path):
@@ -48,7 +60,7 @@ class ImageWrapper:
         return ImageWrapper(Image.new(mode, (w, h)))
 
     def copy(self):
-        return ImageWrapper(self.image_element.copy(), self.file_path, self.filename, self.fileextension)
+        return ImageWrapper(self.image_element.copy(), self.file_path, self.filename, self.fileextension, self.memory_only)
 
     def get_pixel(self, x, y):
         val = self.image_element.getpixel((x, y))
@@ -73,6 +85,9 @@ class ImageWrapper:
         return self.image_element
 
     def set_pillow_image(self, image: Image):
+        self.channels = []
+        for channel in image.split():
+            self.channels.append(np.asarray(channel, dtype=float).copy())
         self.image_element = image
 
     def __is_raw(self):
@@ -85,4 +100,14 @@ class ImageWrapper:
         return self.image_element
 
     def get_mode(self):
-        return self.image_element.mode
+        return self.mode
+
+    def draw_image(self):
+        channels = []
+        for channel in self.channels:
+            if np.any(channel < 0) or np.any(channel > 255):
+                raise ValueError("At least one pixel value outside range.")
+            channel_int = np.uint8(channel)
+            channels.append(Image.fromarray(channel_int, 'L'))
+        self.image_element = Image.merge(self.mode, channels)
+        return self.image_element

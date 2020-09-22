@@ -271,12 +271,13 @@ class MainWindow(QWidget):
     def loadedImage_changed(self, img: ImageWrapper = None):
         if img is not None:
             self.image = img
+            self.image.draw_image()
 
             self.fileWidthLabel.setText(str(img.image_element.width))
             self.fileHeightLabel.setText(str(img.image_element.height))
             self.fileNameLabel.setText(img.filename)
             self.filePathLabel.setText(img.file_path)
-            self.fileLayersLabel.setText(str(len(img.image_element.getbands())))
+            self.fileLayersLabel.setText(str(len(img.channels)))
 
         qim = ImageQt(self.image.image_element)
         pixmap = QPixmap.fromImage(qim).scaled(self.imageLabel.width(), self.imageLabel.height(),
