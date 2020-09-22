@@ -63,14 +63,15 @@ class ImageWrapper:
         return ImageWrapper(self.image_element.copy(), self.file_path, self.filename, self.fileextension, self.memory_only)
 
     def get_pixel(self, x, y):
-        val = self.image_element.getpixel((x, y))
+        val = []
+        for channel in self.channels:
+            val.append(int(channel[y, x]))
 
-        if isinstance(val, int):
-            return [val]
         return val
 
     def set_pixel(self, x, y, value):
-        return self.image_element.putpixel((x, y), value if len(value) > 1 else value[0])
+        for (v, channel) in zip(value, self.channels):
+            channel[y, x] = v
 
     def dimensions(self):
         return self.image_element.size
