@@ -19,6 +19,7 @@ class ImageSectionSelector(QWidget):
     def __init__(self, image: ImageWrapper):
         super().__init__()
         self.image = image
+        image.draw_image()
 
         qim = ImageQt(image.image_element)
         # self.drawn_image = QPixmap(self.image.file_path)
