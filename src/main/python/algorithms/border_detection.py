@@ -94,7 +94,7 @@ def laplace_border_detection(channel: Image):
     for x in range(w):
         for y in range(h - 1):
             if channel_matrix[x, y] == 0:
-                if y - 1 >= 0 and np.sign(channel_matrix[x, y-1]) != np.sign(channel_matrix[x, y+1]):
+                if y - 1 >= 0 and np.sign(channel_matrix[x, y - 1]) != np.sign(channel_matrix[x, y + 1]):
                     channel.putpixel((x, y), 255)
             else:
                 if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
@@ -103,10 +103,23 @@ def laplace_border_detection(channel: Image):
     for y in range(h):
         for x in range(w - 1):
             if channel_matrix[x, y] == 0:
-                if x - 1 >= 0 and np.sign(channel_matrix[x-1, y]) != np.sign(channel_matrix[x+1, y]):
+                if x - 1 >= 0 and np.sign(channel_matrix[x - 1, y]) != np.sign(channel_matrix[x + 1, y]):
                     channel.putpixel((x, y), 255)
             else:
                 if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
                     channel.putpixel((x, y), 255)
 
     return channel
+
+
+def generate_log_mask(mask_size: int, sigma: float):
+    mask = np.zeros((mask_size, mask_size), dtype=float)
+    mask_border_offset = math.floor(mask_size / 2)
+
+    for x in range(-mask_border_offset, mask_border_offset + 1):
+        for y in range(-mask_border_offset, mask_border_offset + 1):
+            mask[x + mask_border_offset][y + mask_border_offset] = -(1 / (math.sqrt(2 * math.pi) * sigma ** 3)) * (
+                        2 - (x ** 2 + y ** 2) / sigma ** 2) * math.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
+
+    return mask
+
