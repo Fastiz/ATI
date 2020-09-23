@@ -12,6 +12,7 @@ import src.main.python.algorithms.border_detection as bd
 
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
+from src.main.python.algorithms.bilateral_filter import bilateral_filter
 from src.main.python.algorithms.diffusion import isotropic_diffusion_step
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
@@ -217,6 +218,10 @@ class MainWindow(QWidget):
         anisotropic_filter_button = QPushButton("Anisotropic diffusion")
         anisotropic_filter_button.clicked.connect(self.anisotropic_diffusion_method_clicked)
         filterLayout.addWidget(anisotropic_filter_button)
+
+        bilateral_filter_button = QPushButton("Bilateral filter")
+        bilateral_filter_button.clicked.connect(self.bilateral_filter_clicked)
+        filterLayout.addWidget(bilateral_filter_button)
 
         # mainLayout.addLayout(filterLayout)
         filterTab.setLayout(filterLayout)
@@ -496,6 +501,12 @@ class MainWindow(QWidget):
         for i in range(number_of_steps):
             diffused_image = isotropic_diffusion_step(self.image)
         self.show_result(diffused_image)
+
+    def bilateral_filter_clicked(self):
+        window_size, _ = QInputDialog.getInt(self, "Select window size", "Window size", 5)
+        sigma_s, _ = QInputDialog.getDouble(self, "Select sigma s", "sigma s", 2)
+        sigma_r, _ = QInputDialog.getDouble(self, "Select sigma r", "sigma r", 30)
+        self.show_result(bilateral_filter(self.image, (window_size, window_size), sigma_s, sigma_r))
 
 
 def main():
