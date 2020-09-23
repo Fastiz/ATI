@@ -5,7 +5,7 @@ import numpy as np
 
 
 def apply_mask(channel: Image, x: int, y: int, mask: np.array):
-    w, h = channel.size
+    h, w = channel.shape
     mask_size = mask.shape[0]
     mask_border_offset = math.floor(mask_size / 2)
     acum = 0
@@ -13,13 +13,13 @@ def apply_mask(channel: Image, x: int, y: int, mask: np.array):
     for i in range(-mask_border_offset, mask_border_offset + 1):
         for j in range(-mask_border_offset, mask_border_offset + 1):
             if 0 <= x + i < w and 0 <= y + j < h:
-                acum += mask[i + mask_border_offset][j + mask_border_offset] * channel.getpixel((x + i, y + j))
+                acum += mask[i + mask_border_offset][j + mask_border_offset] * channel[x + i, y + j]
 
     return acum
 
 
-def prewitt_border_detection(channel: Image):
-    w, h = channel.size
+def prewitt_border_detection(channel: np.ndarray):
+    h, w = channel.shape
 
     channel_cpy = channel.copy()
 
@@ -35,17 +35,18 @@ def prewitt_border_detection(channel: Image):
         [1, 0, -1]
     ])
 
+    # TODO si se va de rango?
     for x in range(w):
         for y in range(h):
             dx = apply_mask(channel_cpy, x, y, prewitt_x_mask)
             dy = apply_mask(channel_cpy, x, y, prewitt_y_mask)
-            channel.putpixel((x, y), int(math.sqrt((dx ** 2) + (dy ** 2))))
+            channel[x, y] = int(math.sqrt((dx ** 2) + (dy ** 2)))
 
     return channel
 
 
-def sobel_border_detection(channel: Image):
-    w, h = channel.size
+def sobel_border_detection(channel: np.ndarray):
+    h, w = channel.shape
 
     channel_cpy = channel.copy()
 
@@ -65,17 +66,17 @@ def sobel_border_detection(channel: Image):
         for y in range(h):
             dx = apply_mask(channel_cpy, x, y, sobel_x_mask)
             dy = apply_mask(channel_cpy, x, y, sobel_y_mask)
-            channel.putpixel((x, y), int(math.sqrt((dx ** 2) + (dy ** 2))))
+            channel[x, y] = int(math.sqrt((dx ** 2) + (dy ** 2)))
 
     return channel
 
 
-def laplace_border_detection(channel: Image):
-    w, h = channel.size
+def laplace_border_detection(channel: np.ndarray, mask: np.ndarray):
+    h, w = channel.shape
 
     channel_cpy = channel.copy()
 
-    channel_matrix = np.asarray(channel).copy()
+    channel_matrix = channel.copy()
 
     laplace_mask = np.array([
         [0, -1, 0],
@@ -85,29 +86,29 @@ def laplace_border_detection(channel: Image):
 
     for x in range(w):
         for y in range(h):
-            channel_matrix[x, y] = apply_mask(channel_cpy, x, y, laplace_mask)
+            channel_matrix[x, y] = apply_mask(channel_cpy, x, y, mask)
 
     for x in range(w):
         for y in range(h):
-            channel.putpixel((x, y), 0)
+            channel[x, y] = 0
 
     for x in range(w):
         for y in range(h - 1):
             if channel_matrix[x, y] == 0:
                 if y - 1 >= 0 and np.sign(channel_matrix[x, y - 1]) != np.sign(channel_matrix[x, y + 1]):
-                    channel.putpixel((x, y), 255)
+                    channel[x, y] = 255
             else:
                 if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
-                    channel.putpixel((x, y), 255)
+                    channel[x, y] = 255
 
     for y in range(h):
         for x in range(w - 1):
             if channel_matrix[x, y] == 0:
                 if x - 1 >= 0 and np.sign(channel_matrix[x - 1, y]) != np.sign(channel_matrix[x + 1, y]):
-                    channel.putpixel((x, y), 255)
+                    channel[x, y] = 255
             else:
                 if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
-                    channel.putpixel((x, y), 255)
+                    channel[x, y] = 255
 
     return channel
 

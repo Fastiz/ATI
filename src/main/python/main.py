@@ -23,6 +23,8 @@ from src.main.python.views.OperationsBetweenImages import OperationsBetweenImage
 
 import src.main.python.algorithms.channel_operations as op
 
+import numpy as np
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -227,24 +229,16 @@ class MainWindow(QWidget):
         filterTab.setLayout(filterLayout)
         self.tabLayout.addTab(filterTab, "Filters")
 
-
-
-
-
-
-
-
         # Border detection
         borderDetectionLayout = QHBoxLayout()
 
         borderDetectionLayout.addWidget(QPushButton("Prewitt", clicked=self.prewitt_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Sobel", clicked=self.sobel_border_detection_clicked))
-        borderDetectionLayout.addWidget(QPushButton("Laplace", clicked=self.laplace_border_detection_clicked))
+        borderDetectionLayout.addWidget(QPushButton("Laplacian", clicked=self.laplace_border_detection_clicked))
+        borderDetectionLayout.addWidget(QPushButton("Laplacian of Gaussian", clicked=self.log_border_detection_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
-
-
 
         # ALGORITHMS
 
@@ -460,34 +454,46 @@ class MainWindow(QWidget):
 
         self.show_result(img_cpy)
 
-    def askForInt(self, message: str, default: int):
+    def askForInt(self, message: str, default: int = 1):
         intVal, _ = QInputDialog.getInt(self, message, "Enter integer value", default)
         return intVal
 
     def prewitt_border_detection_clicked(self):
-        img_cpy = self.image.copy()
-        channels = img_cpy.image_element.split()
-        for channel in channels:
+        img_cpy: ImageWrapper = self.image.copy()
+        for channel in img_cpy.channels:
             bd.prewitt_border_detection(channel)
-        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
         self.show_result(img_cpy)
 
     def sobel_border_detection_clicked(self):
-        img_cpy = self.image.copy()
-        channels = img_cpy.image_element.split()
-        for channel in channels:
+        img_cpy: ImageWrapper = self.image.copy()
+        for channel in img_cpy.channels:
             bd.sobel_border_detection(channel)
-        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
         self.show_result(img_cpy)
 
     def laplace_border_detection_clicked(self):
-        img_cpy = self.image.copy()
-        channels = img_cpy.image_element.split()
-        for channel in channels:
-            bd.laplace_border_detection(channel)
-        img_cpy.set_pillow_image(Image.merge(img_cpy.image_element.mode, channels))
+        img_cpy: ImageWrapper = self.image.copy()
+
+        laplace_mask = np.array([
+            [0, -1, 0],
+            [-1, 4, -1],
+            [0, -1, 0]
+        ])
+
+        for channel in img_cpy.channels:
+            bd.laplace_border_detection(channel, laplace_mask)
         self.show_result(img_cpy)
-        
+
+    def log_border_detection_clicked(self):
+        sigma = self.askForInt("Sigma", 1)
+        mask_size = self.askForInt("Mask size", 7)
+        img_cpy: ImageWrapper = self.image.copy()
+
+        laplace_mask = bd.generate_log_mask(mask_size, sigma)
+
+        for channel in img_cpy.channels:
+            bd.laplace_border_detection(channel, laplace_mask)
+        self.show_result(img_cpy)
+
     def isotropic_diffusion_method_clicked(self):
         number_of_steps, _ = QInputDialog.getInt(self, "Select number of steps", "Steps", 5)
         diffused_image = self.image
