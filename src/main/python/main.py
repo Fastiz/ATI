@@ -18,7 +18,7 @@ from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayl
     exponential_multiplicative_noise, salt_and_pepper
 from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression, \
     gamma_power_function
-from src.main.python.algorithms.thresholding import global_thresholding
+from src.main.python.algorithms.thresholding import global_thresholding, otsu_method
 from src.main.python.utils.ImageWrapper import ImageWrapper, is_raw
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
 
@@ -246,6 +246,7 @@ class MainWindow(QWidget):
         thresholdingDetectionLayout = QHBoxLayout()
 
         thresholdingDetectionLayout.addWidget(QPushButton("Global", clicked=self.global_thresholding))
+        thresholdingDetectionLayout.addWidget(QPushButton("Otsu", clicked=self.otsu_thresholding))
 
         thresholdingTab.setLayout(thresholdingDetectionLayout)
         self.tabLayout.addTab(thresholdingTab, "Thresholding")
@@ -532,6 +533,13 @@ class MainWindow(QWidget):
         self.show_result(image2)
 
         QMessageBox.about(self, "About", 'With T=%s in %s iterations' % (t, it))
+
+    def otsu_thresholding(self):
+        image1, image2, t = otsu_method(self.image)
+        self.show_result(image1)
+        self.show_result(image2)
+
+        QMessageBox.about(self, "About", 'T=%s' % t)
 
 
 def main():

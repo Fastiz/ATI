@@ -3,6 +3,31 @@ import numpy as np
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
+def calculate_pdf(channel: np.array) -> np.array:
+    w, h = channel.shape
+
+    count: int = 0
+    result: np.array = np.zeros(256)
+    for x in range(w):
+        for y in range(h):
+            val = channel[x, y]
+            result[int(val)] += 1
+            count += 1
+
+    return np.array([val / count for val in result])
+
+
+def calculate_cdf_from_pdf(pdf: np.array) -> np.array:
+    result: np.array = np.zeros(256)
+
+    prev_val: float = 0
+    for t in range(256):
+        result[t] = prev_val + pdf[t]
+        prev_val = result[t]
+
+    return result
+
+
 def calculate_new_threshold(channel: np.array, condition: Callable[[float], bool]) -> float:
     w, h = channel.shape
 
@@ -55,11 +80,24 @@ def black_mask_hoc(condition: Callable[[float], bool]) -> Callable[[float], floa
     return black_mask
 
 
+def get_regions(channel: np.array, t: float, mode: str) -> Tuple[ImageWrapper, ImageWrapper]:
+    w, h = channel.shape
+
+    region1: np.array = filter_channel(channel, black_mask_hoc(lower_than_hof(t)))
+    image1: ImageWrapper = ImageWrapper.from_dimensions(w, h, mode)
+    image1.channels = [region1]
+
+    region2: np.array = filter_channel(channel, black_mask_hoc(negation_hoc(lower_than_hof(t))))
+    image2: ImageWrapper = ImageWrapper.from_dimensions(w, h, mode)
+    image2.channels = [region2]
+
+    return image1, image2
+
+
 def global_thresholding(image: ImageWrapper, starting_t: float, epsilon: float) -> Tuple[ImageWrapper, ImageWrapper, int, int]:
     if len(image.channels) > 1:
         raise ValueError("Method only supports one channel")
     channel = image.channels[0]
-    w, h = channel.shape
 
     iteration_count: int = 0
     prev_t: float = float('inf')
@@ -69,12 +107,28 @@ def global_thresholding(image: ImageWrapper, starting_t: float, epsilon: float) 
         prev_t = curr_t
         curr_t = calculate_new_threshold(channel, lower_than_hof(curr_t))
 
-    region1: np.array = filter_channel(channel, black_mask_hoc(lower_than_hof(curr_t)))
-    image1: ImageWrapper = ImageWrapper.from_dimensions(w, h, image.get_mode())
-    image1.channels = [region1]
-
-    region2: np.array = filter_channel(channel, black_mask_hoc(negation_hoc(lower_than_hof(curr_t))))
-    image2: ImageWrapper = ImageWrapper.from_dimensions(w, h, image.get_mode())
-    image2.channels = [region2]
+    image1, image2 = get_regions(channel, curr_t, image.get_mode())
 
     return image1, image2, int(curr_t), iteration_count
+
+
+def otsu_method(image: ImageWrapper) -> Tuple[ImageWrapper, ImageWrapper, int]:
+    if len(image.channels) > 1:
+        raise ValueError("Method only supports one channel")
+    channel = image.channels[0]
+
+    pdf: np.array = calculate_pdf(channel)
+    cdf: np.array = calculate_cdf_from_pdf(pdf)
+
+    accum_means: np.array = calculate_cdf_from_pdf(np.array([i * p for i, p in zip(range(256), pdf)]))
+    global_mean: float = accum_means[-1]
+
+    variance: np.array = np.array([np.power(global_mean * cdf[t] - accum_means[t], 2)/(cdf[t]*(1-cdf[t])) for t in range(256)])
+
+    arg_max = np.argwhere(variance == max(variance))
+
+    t = sum(arg_max) / len(arg_max)
+
+    image1, image2 = get_regions(channel, t, image.get_mode())
+
+    return image1, image2, int(t)
