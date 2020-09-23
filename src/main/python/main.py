@@ -6,7 +6,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHBoxLayout, \
-    QLabel, QPushButton, QInputDialog, QTabWidget
+    QLabel, QPushButton, QInputDialog, QTabWidget, QMessageBox
 
 import src.main.python.algorithms.border_detection as bd
 
@@ -18,6 +18,7 @@ from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayl
     exponential_multiplicative_noise, salt_and_pepper
 from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression, \
     gamma_power_function
+from src.main.python.algorithms.thresholding import global_thresholding
 from src.main.python.utils.ImageWrapper import ImageWrapper, is_raw
 from src.main.python.views.OperationsBetweenImages import OperationsBetweenImages
 
@@ -124,6 +125,7 @@ class MainWindow(QWidget):
         noiseTab = QWidget()
         filterTab = QWidget()
         borderDetectionTab = QWidget()
+        thresholdingTab = QWidget()
 
         algorithmsLayout = QHBoxLayout()
 
@@ -239,6 +241,14 @@ class MainWindow(QWidget):
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
+
+        # Thresholding
+        thresholdingDetectionLayout = QHBoxLayout()
+
+        thresholdingDetectionLayout.addWidget(QPushButton("Global", clicked=self.global_thresholding))
+
+        thresholdingTab.setLayout(thresholdingDetectionLayout)
+        self.tabLayout.addTab(thresholdingTab, "Thresholding")
 
         # ALGORITHMS
 
@@ -513,6 +523,15 @@ class MainWindow(QWidget):
         sigma_s, _ = QInputDialog.getDouble(self, "Select sigma s", "sigma s", 2)
         sigma_r, _ = QInputDialog.getDouble(self, "Select sigma r", "sigma r", 30)
         self.show_result(bilateral_filter(self.image, (window_size, window_size), sigma_s, sigma_r))
+
+    def global_thresholding(self):
+        start_t, _ = QInputDialog.getInt(self, "Select starting threshold", "Starting threshold", 100)
+        stop_delta_t, _ = QInputDialog.getInt(self, "Select delta T", "Delta T", 2)
+        image1, image2, t, it = global_thresholding(self.image, start_t, stop_delta_t)
+        self.show_result(image1)
+        self.show_result(image2)
+
+        QMessageBox.about(self, "About", 'With T=%s in %s iterations' % (t, it))
 
 
 def main():
