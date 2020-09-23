@@ -1,4 +1,4 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, List
 import numpy as np
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
@@ -112,23 +112,42 @@ def global_thresholding(image: ImageWrapper, starting_t: float, epsilon: float) 
     return image1, image2, int(curr_t), iteration_count
 
 
-def otsu_method(image: ImageWrapper) -> Tuple[ImageWrapper, ImageWrapper, int]:
-    if len(image.channels) > 1:
-        raise ValueError("Method only supports one channel")
-    channel = image.channels[0]
+def otsu_method(image: ImageWrapper) -> Tuple[ImageWrapper, ImageWrapper, List[int]]:
+    results = []
+    for channel in image.channels:
+        pdf: np.array = calculate_pdf(channel)
+        cdf: np.array = calculate_cdf_from_pdf(pdf)
 
-    pdf: np.array = calculate_pdf(channel)
-    cdf: np.array = calculate_cdf_from_pdf(pdf)
+        accum_means: np.array = calculate_cdf_from_pdf(np.array([i * p for i, p in zip(range(256), pdf)]))
+        global_mean: float = accum_means[-1]
 
-    accum_means: np.array = calculate_cdf_from_pdf(np.array([i * p for i, p in zip(range(256), pdf)]))
-    global_mean: float = accum_means[-1]
+        variance = []
+        for t in range(256):
+            nominator = np.power(global_mean * cdf[t] - accum_means[t], 2)
+            denominator = cdf[t]*(1-cdf[t])
+            variance.append(nominator/denominator if not np.isclose(denominator, 0) else 0)
+        variance = np.array(variance)
 
-    variance: np.array = np.array([np.power(global_mean * cdf[t] - accum_means[t], 2)/(cdf[t]*(1-cdf[t])) for t in range(256)])
+        arg_max = np.argwhere(variance == max(variance))
 
-    arg_max = np.argwhere(variance == max(variance))
+        t = sum(arg_max) / len(arg_max)
 
-    t = sum(arg_max) / len(arg_max)
+        image1, image2 = get_regions(channel, t, image.get_mode())
 
-    image1, image2 = get_regions(channel, t, image.get_mode())
+        results.append([image1, image2, int(t)])
 
-    return image1, image2, int(t)
+    image1_channels = []
+    image2_channels = []
+    ts = []
+    for result in results:
+        image1, image2, t = result
+        image1_channels.append(image1.channels[0])
+        image2_channels.append(image2.channels[0])
+        ts.append(t)
+
+    image1, image2, _ = results[0]
+
+    image1.channels = image1_channels
+    image2.channels = image2_channels
+
+    return image1, image2, ts
