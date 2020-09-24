@@ -106,9 +106,20 @@ class ImageWrapper:
     def draw_image(self):
         channels = []
         for channel in self.channels:
-            if np.any(channel < 0) or np.any(channel > 255):
-                raise ValueError("At least one pixel value outside range.")
-            channel_int = np.uint8(channel)
+            channel_int = self.normalize_channel(np.uint8(channel), 0, 255)
             channels.append(Image.fromarray(channel_int, 'L'))
         self.image_element = Image.merge(self.mode, channels)
         return self.image_element
+
+    def normalize(self):
+        for channel in self.channels:
+            self.normalize_channel(channel, 0, 255)
+
+    @staticmethod
+    def normalize_channel(channel: np.ndarray, new_min: float, new_max: float):
+        oldMax = channel.max()
+        oldMin = channel.min()
+        for i in range(channel.shape[1]):
+            for j in range(channel.shape[0]):
+                channel[i, j] = (((channel[i, j] - oldMin) * (new_max - new_min)) / (oldMax - oldMin)) + new_min
+        return channel

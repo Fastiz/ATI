@@ -28,6 +28,8 @@ import numpy as np
 
 
 class MainWindow(QWidget):
+    image: ImageWrapper
+
     def __init__(self):
         super().__init__()
         self.title = 'ATI'
@@ -237,6 +239,7 @@ class MainWindow(QWidget):
         borderDetectionLayout.addWidget(QPushButton("Prewitt", clicked=self.prewitt_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Sobel", clicked=self.sobel_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Laplacian", clicked=self.laplace_border_detection_clicked))
+        borderDetectionLayout.addWidget(QPushButton("Laplacian (Threshold)", clicked=self.laplace_threshold_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Laplacian of Gaussian", clicked=self.log_border_detection_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
@@ -469,6 +472,10 @@ class MainWindow(QWidget):
         intVal, _ = QInputDialog.getInt(self, message, "Enter integer value", default)
         return intVal
 
+    def askForFloat(self, message: str, default: float = 1.0):
+        floatVal, _ = QInputDialog.getDouble(self, message, "Enter float value", default)
+        return floatVal
+
     def prewitt_border_detection_clicked(self):
         img_cpy: ImageWrapper = self.image.copy()
         for channel in img_cpy.channels:
@@ -492,6 +499,21 @@ class MainWindow(QWidget):
 
         for channel in img_cpy.channels:
             bd.laplace_border_detection(channel, laplace_mask)
+        self.show_result(img_cpy)
+
+    def laplace_threshold_border_detection_clicked(self):
+        threshold = self.askForFloat("Threshold")
+
+        img_cpy: ImageWrapper = self.image.copy()
+
+        laplace_mask = np.array([
+            [0, -1, 0],
+            [-1, 4, -1],
+            [0, -1, 0]
+        ])
+
+        for channel in img_cpy.channels:
+            bd.laplace_border_detection(channel, laplace_mask, threshold)
         self.show_result(img_cpy)
 
     def log_border_detection_clicked(self):
