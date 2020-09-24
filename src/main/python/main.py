@@ -529,14 +529,14 @@ class MainWindow(QWidget):
         start_t, _ = QInputDialog.getInt(self, "Select starting threshold", "Starting threshold", 100)
         stop_delta_t, _ = QInputDialog.getInt(self, "Select delta T", "Delta T", 2)
         image1, image2, t, it = global_thresholding(self.image, start_t, stop_delta_t)
-        self.show_result(image1)
+
         self.show_result(image2)
 
         QMessageBox.about(self, "About", 'With T=%s in %s iterations' % (t, it))
 
     def otsu_thresholding(self):
         image1, image2, t = otsu_method(self.image)
-        self.show_result(image1)
+
         self.show_result(image2)
 
         QMessageBox.about(self, "About", 'T=%s' % t)

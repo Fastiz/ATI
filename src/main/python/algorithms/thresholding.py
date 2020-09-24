@@ -75,7 +75,7 @@ def filter_channel(channel: np.array, transformation: Callable[[float], float]) 
 def black_mask_hoc(condition: Callable[[float], bool]) -> Callable[[float], float]:
     def black_mask(x: float) -> float:
         if condition(x):
-            return x
+            return 255
         return 0
     return black_mask
 
