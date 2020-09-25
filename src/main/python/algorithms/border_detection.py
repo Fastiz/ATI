@@ -18,6 +18,7 @@ def apply_mask(channel: Image, x: int, y: int, mask: np.array):
 
     return acum
 
+
 def first_derivative_border_detection(channel: np.ndarray, derivative_masks: List[np.ndarray]):
     h, w = channel.shape
 
@@ -34,7 +35,8 @@ def first_derivative_border_detection(channel: np.ndarray, derivative_masks: Lis
 
     return channel
 
-def laplace_border_detection(channel: np.ndarray, mask: np.ndarray, threshold: float = None):
+
+def laplace_border_detection(channel: np.ndarray, mask: np.ndarray, threshold: float = 0):
     h, w = channel.shape
 
     channel_cpy = channel.copy()
@@ -49,31 +51,29 @@ def laplace_border_detection(channel: np.ndarray, mask: np.ndarray, threshold: f
         for y in range(h):
             channel[x, y] = 0
 
+    # if abs(channel_matrix[x, y]) + abs(channel_matrix[x + 1, y]) >= threshold:
+
     for x in range(w):
         for y in range(h - 1):
-            if threshold is None:
-                if channel_matrix[x, y] == 0:
-                    if y - 1 >= 0 and np.sign(channel_matrix[x, y - 1]) != np.sign(channel_matrix[x, y + 1]):
-                        channel[x, y] = 255
-                else:
-                    if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
+            if channel_matrix[x, y] == 0:
+                if y - 1 >= 0 and np.sign(channel_matrix[x, y - 1]) != np.sign(channel_matrix[x, y + 1]):
+                    if abs(channel_matrix[x, y - 1]) + abs(channel_matrix[x, y + 1]) >= threshold:
                         channel[x, y] = 255
             else:
-                if abs(channel_matrix[x, y]) + abs(channel_matrix[x, y + 1]) >= threshold:
-                    channel[x, y] = 255
+                if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x, y + 1]):
+                    if abs(channel_matrix[x, y]) + abs(channel_matrix[x, y + 1]) >= threshold:
+                        channel[x, y] = 255
 
     for y in range(h):
         for x in range(w - 1):
-            if threshold is None:
-                if channel_matrix[x, y] == 0:
-                    if x - 1 >= 0 and np.sign(channel_matrix[x - 1, y]) != np.sign(channel_matrix[x + 1, y]):
-                        channel[x, y] = 255
-                else:
-                    if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
+            if channel_matrix[x, y] == 0:
+                if x - 1 >= 0 and np.sign(channel_matrix[x - 1, y]) != np.sign(channel_matrix[x + 1, y]):
+                    if abs(channel_matrix[x - 1, y]) + abs(channel_matrix[x + 1, y]) >= threshold:
                         channel[x, y] = 255
             else:
-                if abs(channel_matrix[x, y]) + abs(channel_matrix[x + 1, y]) >= threshold:
-                    channel[x, y] = 255
+                if np.sign(channel_matrix[x, y]) != np.sign(channel_matrix[x + 1, y]):
+                    if abs(channel_matrix[x, y]) + abs(channel_matrix[x + 1, y]) >= threshold:
+                        channel[x, y] = 255
 
     return channel
 
