@@ -18,36 +18,6 @@ def apply_mask(channel: Image, x: int, y: int, mask: np.array):
 
     return acum
 
-
-def prewitt_border_detection(channel: np.ndarray):
-    h, w = channel.shape
-
-    channel_cpy = channel.copy()
-
-    prewitt_x_mask = np.array([
-        [1, 1, 1],
-        [0, 0, 0],
-        [-1, -1, -1]
-    ])
-
-    prewitt_y_mask = np.array([
-        [1, 0, -1],
-        [1, 0, -1],
-        [1, 0, -1]
-    ])
-
-    # TODO si se va de rango?
-    for x in range(w):
-        for y in range(h):
-            dx = apply_mask(channel_cpy, x, y, prewitt_x_mask)
-            dy = apply_mask(channel_cpy, x, y, prewitt_y_mask)
-            channel[x, y] = int(math.sqrt((dx ** 2) + (dy ** 2)))
-            if channel[x, y] > 255:
-                channel[x, y] = 255
-
-    return channel
-
-
 def first_derivative_border_detection(channel: np.ndarray, derivative_masks: List[np.ndarray]):
     h, w = channel.shape
 
@@ -63,35 +33,6 @@ def first_derivative_border_detection(channel: np.ndarray, derivative_masks: Lis
                 channel[x, y] = 255
 
     return channel
-
-
-def sobel_border_detection(channel: np.ndarray):
-    h, w = channel.shape
-
-    channel_cpy = channel.copy()
-
-    sobel_x_mask = np.array([
-        [-1, -2, -1],
-        [0, 0, 0],
-        [1, 2, 1]
-    ])
-
-    sobel_y_mask = np.array([
-        [-1, 0, 1],
-        [-2, 0, 2],
-        [-1, 0, 1]
-    ])
-
-    for x in range(w):
-        for y in range(h):
-            dx = apply_mask(channel_cpy, x, y, sobel_x_mask)
-            dy = apply_mask(channel_cpy, x, y, sobel_y_mask)
-            channel[x, y] = int(math.sqrt((dx ** 2) + (dy ** 2)))
-            if channel[x, y] > 255:
-                channel[x, y] = 255
-
-    return channel
-
 
 def laplace_border_detection(channel: np.ndarray, mask: np.ndarray, threshold: float = None):
     h, w = channel.shape
