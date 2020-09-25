@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 from PIL.Image import Image
 import numpy as np
@@ -41,6 +42,23 @@ def prewitt_border_detection(channel: np.ndarray):
             dx = apply_mask(channel_cpy, x, y, prewitt_x_mask)
             dy = apply_mask(channel_cpy, x, y, prewitt_y_mask)
             channel[x, y] = int(math.sqrt((dx ** 2) + (dy ** 2)))
+            if channel[x, y] > 255:
+                channel[x, y] = 255
+
+    return channel
+
+
+def first_derivative_border_detection(channel: np.ndarray, derivative_masks: List[np.ndarray]):
+    h, w = channel.shape
+
+    channel_cpy = channel.copy()
+
+    for x in range(w):
+        for y in range(h):
+            derivative_result = 0
+            for mask in derivative_masks:
+                derivative_result += apply_mask(channel_cpy, x, y, mask) ** 2
+            channel[x, y] = math.sqrt(derivative_result)
             if channel[x, y] > 255:
                 channel[x, y] = 255
 
@@ -129,3 +147,47 @@ def generate_log_mask(mask_size: int, sigma: float):
                     2 - (x ** 2 + y ** 2) / sigma ** 2) * math.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
 
     return mask
+
+
+def rotate_matrix(mat):
+    if not len(mat):
+        return
+
+    top = 0
+    bottom = len(mat) - 1
+
+    left = 0
+    right = len(mat[0]) - 1
+
+    while left < right and top < bottom:
+        prev = mat[top + 1][left]
+
+        for i in range(left, right + 1):
+            curr = mat[top][i]
+            mat[top][i] = prev
+            prev = curr
+
+        top += 1
+
+        for i in range(top, bottom + 1):
+            curr = mat[i][right]
+            mat[i][right] = prev
+            prev = curr
+
+        right -= 1
+
+        for i in range(right, left - 1, -1):
+            curr = mat[bottom][i]
+            mat[bottom][i] = prev
+            prev = curr
+
+        bottom -= 1
+
+        for i in range(bottom, top - 1, -1):
+            curr = mat[i][left]
+            mat[i][left] = prev
+            prev = curr
+
+        left += 1
+
+    return mat

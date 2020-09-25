@@ -113,6 +113,7 @@ class MainWindow(QWidget):
             QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
         fileActionsLayout.addWidget(QPushButton("Open in OS image viewer", clicked=self.open_file_clicked))
         fileActionsLayout.addWidget(QPushButton("Grey level histogram", clicked=self.histogram_transformation_clicked))
+        fileActionsLayout.addWidget(QPushButton("Reload from disk", clicked=self.reload_from_disk_clicked))
         imageDataLayout.addLayout(fileActionsLayout)
 
         imagePreviewAndDataLayout.addLayout(imageDataLayout)
@@ -239,8 +240,11 @@ class MainWindow(QWidget):
         borderDetectionLayout.addWidget(QPushButton("Prewitt", clicked=self.prewitt_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Sobel", clicked=self.sobel_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Laplacian", clicked=self.laplace_border_detection_clicked))
-        borderDetectionLayout.addWidget(QPushButton("Laplacian (Threshold)", clicked=self.laplace_threshold_border_detection_clicked))
+        borderDetectionLayout.addWidget(
+            QPushButton("Laplacian (Threshold)", clicked=self.laplace_threshold_border_detection_clicked))
         borderDetectionLayout.addWidget(QPushButton("Laplacian of Gaussian", clicked=self.log_border_detection_clicked))
+        borderDetectionLayout.addWidget(
+            QPushButton("Generic directional operator", clicked=self.generic_derivatives_border_detection_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
@@ -289,6 +293,9 @@ class MainWindow(QWidget):
             return True
 
         return False
+
+    def reload_from_disk_clicked(self):
+        self.loadedImage_changed(ImageWrapper.from_path(self.image.file_path))
 
     def loadedImage_changed(self, img: ImageWrapper = None):
         if img is not None:
@@ -368,8 +375,8 @@ class MainWindow(QWidget):
         result = gamma_power_function(self.image, gamma)
         self.show_result(result)
 
-    def show_result(self, result: ImageWrapper):
-        new_image_window = ImageCropper(result)
+    def show_result(self, result: ImageWrapper, window_title: str = None):
+        new_image_window = ImageCropper(result, window_title)
         self.imageVisualizerWindows.append(new_image_window)
         new_image_window.show()
 
@@ -468,25 +475,90 @@ class MainWindow(QWidget):
 
         self.show_result(img_cpy)
 
-    def askForInt(self, message: str, default: int = 1):
-        intVal, _ = QInputDialog.getInt(self, message, "Enter integer value", default)
+    def askForInt(self, message: str, default: int = 1, min: int = 1, max: int = 2147483647):
+        intVal, _ = QInputDialog.getInt(self, "Enter integer value", message, default, min=min, max=max)
         return intVal
 
     def askForFloat(self, message: str, default: float = 1.0):
-        floatVal, _ = QInputDialog.getDouble(self, message, "Enter float value", default)
+        floatVal, _ = QInputDialog.getDouble(self, "Enter float value", message, default)
         return floatVal
 
     def prewitt_border_detection_clicked(self):
+        prewitt_x_mask = np.array([
+            [1, 1, 1],
+            [0, 0, 0],
+            [-1, -1, -1]
+        ])
+
+        prewitt_y_mask = np.array([
+            [1, 0, -1],
+            [1, 0, -1],
+            [1, 0, -1]
+        ])
+
         img_cpy: ImageWrapper = self.image.copy()
         for channel in img_cpy.channels:
-            bd.prewitt_border_detection(channel)
+            bd.first_derivative_border_detection(channel, [prewitt_x_mask, prewitt_y_mask])
         self.show_result(img_cpy)
 
     def sobel_border_detection_clicked(self):
+        sobel_x_mask = np.array([
+            [-1, -2, -1],
+            [0, 0, 0],
+            [1, 2, 1]
+        ])
+
+        sobel_y_mask = np.array([
+            [-1, 0, 1],
+            [-2, 0, 2],
+            [-1, 0, 1]
+        ])
+
         img_cpy: ImageWrapper = self.image.copy()
         for channel in img_cpy.channels:
-            bd.sobel_border_detection(channel)
+            bd.first_derivative_border_detection(channel, [sobel_x_mask, sobel_y_mask])
         self.show_result(img_cpy)
+
+    def generic_derivatives_border_detection_clicked(self):
+        derivative_operators_dict = dict()
+        derivative_operators_dict["Prewitt"] = np.array([
+            [1, 1, 1],
+            [0, 0, 0],
+            [-1, -1, -1]
+        ])
+        derivative_operators_dict["Unnamed"] = np.array([
+            [1, 1, 1],
+            [1, -2, 1],
+            [-1, -1, -1]
+        ])
+        derivative_operators_dict["Kirsh"] = np.array([
+            [5, 5, 5],
+            [-3, 0, -3],
+            [-3, -3, -3]
+        ])
+        derivative_operators_dict["Sobel"] = np.array([
+            [1, 2, 1],
+            [0, 0, 0],
+            [-1, -2, -1]
+        ])
+
+        message = ""
+        operator_list = []
+        for operator in derivative_operators_dict.keys():
+            operator_list.append(operator)
+            message += str(len(operator_list)) + ": " + operator + " operator\n"
+
+        selected_operator = self.askForInt(message, 1, 1, len(operator_list)) - 1
+
+        selected_operator_name = operator_list[selected_operator]
+        mask = derivative_operators_dict[selected_operator_name]
+
+        for i in range(4):
+            img_cpy: ImageWrapper = self.image.copy()
+            for channel in img_cpy.channels:
+                bd.first_derivative_border_detection(channel, [mask])
+            self.show_result(img_cpy, selected_operator_name + " operator (Rotated " + str(i*45) + "º)")
+            bd.rotate_matrix(mask)
 
     def laplace_border_detection_clicked(self):
         img_cpy: ImageWrapper = self.image.copy()

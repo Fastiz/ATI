@@ -119,7 +119,7 @@ class ImageWrapper:
     def normalize_channel(channel: np.ndarray, new_min: float, new_max: float):
         oldMax = channel.max()
         oldMin = channel.min()
-        for i in range(channel.shape[1]):
-            for j in range(channel.shape[0]):
+        for i in range(channel.shape[0]):
+            for j in range(channel.shape[1]):
                 channel[i, j] = (((channel[i, j] - oldMin) * (new_max - new_min)) / (oldMax - oldMin)) + new_min
         return channel

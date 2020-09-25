@@ -5,16 +5,16 @@ from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
 class ImageCropper(QWidget):
-    def __init__(self, image: ImageWrapper):
+    def __init__(self, image: ImageWrapper, window_title: str = None):
         super().__init__()
         self.image = image
 
-        self.init_ui()
+        self.init_ui(window_title)
 
-    def init_ui(self):
+    def init_ui(self, window_title: str = None):
         width, height = self.image.dimensions()
         self.setGeometry(30, 30, width, height)
-        self.setWindowTitle(self.image.file_name())
+        self.setWindowTitle(self.image.file_name() if window_title is None else window_title)
         self.center()
 
         layout = QVBoxLayout()
