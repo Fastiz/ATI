@@ -3,16 +3,16 @@ import numpy as np
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
-def calculate_w(i: int, j: int, w: int, k: int, sigma_s: float, sigma_r: float, channels: List[np.array]) -> float:
-    ij_value = np.array([channel[i, j]/255 for channel in channels])
+def calculate_w(x: int, y: int, w: int, k: int, sigma_s: float, sigma_r: float, channels: List[np.array]) -> float:
+    ij_value = np.array([channel[x, y]/255 for channel in channels])
     wk_value = np.array([channel[w, k]/255 for channel in channels])
 
-    val_1: float = -(np.power(i - k, 2) + np.power(j - w, 2)) / (2 * np.power(sigma_s, 2))
+    val_1: float = -(np.power(x - w, 2) + np.power(y - k, 2)) / (2 * np.power(sigma_s, 2))
     val_2: float = -(np.power(np.linalg.norm(ij_value - wk_value), 2)) / (2 * np.power(sigma_r, 2))
     return np.exp(val_1 + val_2)
 
 
-def calculate_filter(channels: List[np.array], i: int, j: int, window_dim: Tuple[int, int],
+def calculate_filter(channels: List[np.array], x: int, y: int, window_dim: Tuple[int, int],
                      sigma_s: float, sigma_r: float) -> List[float]:
     window_w, window_h = window_dim
     image_w, image_h = channels[0].shape
@@ -22,12 +22,12 @@ def calculate_filter(channels: List[np.array], i: int, j: int, window_dim: Tuple
 
     nominators: List[float] = [0] * len(channels)
     denominators: List[float] = [0] * len(channels)
-    for k in range(max(0, i - max_h), min(image_h, i + max_h + 1)):
-        for w in range(max(0, j - max_w), min(image_w, j + max_w + 1)):
-            aux = calculate_w(i, j, w, k, sigma_s, sigma_r, channels)
-            for i, channel in zip(range(len(channels)), channels):
-                nominators[i] += channel[k, w] * aux
-                denominators[i] += aux
+    for k in range(max(0, y - max_h), min(image_h, y + max_h + 1)):
+        for w in range(max(0, x - max_w), min(image_w, x + max_w + 1)):
+            aux = calculate_w(x, y, w, k, sigma_s, sigma_r, channels)
+            for a, channel in zip(range(len(channels)), channels):
+                nominators[a] += channel[w, k] * aux
+                denominators[a] += aux
 
     return [nominator/denominator for nominator, denominator in zip(nominators, denominators)]
 
@@ -40,12 +40,12 @@ def bilateral_filter(image: ImageWrapper, window_dim: Tuple[int, int], sigma_s: 
     w, h = image.dimensions()
     new_image: ImageWrapper = ImageWrapper.from_dimensions(w, h, image.get_mode())
 
-    new_channels = [np.zeros(shape=(h, w))] * len(image.channels)
-    for i in range(h):
-        for j in range(w):
-            values = calculate_filter(image.channels, i, j, window_dim, sigma_s, sigma_r)
+    new_channels = [np.zeros(shape=(w, h))] * len(image.channels)
+    for y in range(h):
+        for x in range(w):
+            values = calculate_filter(image.channels, x, y, window_dim, sigma_s, sigma_r)
             for val, channel in zip(values, new_channels):
-                channel[i, j] = val
+                channel[x, y] = val
 
     new_image.channels = new_channels
     new_image.draw_image()
