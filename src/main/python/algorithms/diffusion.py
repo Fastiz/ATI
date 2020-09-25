@@ -36,8 +36,10 @@ def calculate_d(i: int, j: int, channel: np.array, direction: str) -> float:
         raise ValueError("D directions can only be N, S, E or O")
 
 
-def lecrerc(x: float):
-    return np.exp(-np.power(x/255, 2)/np.power(1, 2))
+def lecrerc_hof(sigma: float) -> Callable[[float], float]:
+    def lecrerc(x: float):
+        return np.exp(-np.power(x/255, 2)/np.power(sigma, 2))
+    return lecrerc
 
 
 def calculate_direction(i: int, j: int, channel: np.array, direction: str,
@@ -66,8 +68,8 @@ def diffusion_step(c_calculator: Callable[[float], float], image: ImageWrapper, 
     return new_image
 
 
-def anisotropic_diffusion_step(image: Image, step=1.0/4) -> ImageWrapper:
-    return diffusion_step(lecrerc, image, step)
+def anisotropic_diffusion_step(image: Image, sigma: float, step=1.0/4) -> ImageWrapper:
+    return diffusion_step(lecrerc_hof(sigma), image, step)
 
 
 def isotropic_diffusion_step(image: Image, step=1.0/4) -> ImageWrapper:

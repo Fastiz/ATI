@@ -13,7 +13,7 @@ import src.main.python.algorithms.border_detection as bd
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
 from src.main.python.algorithms.bilateral_filter import bilateral_filter
-from src.main.python.algorithms.diffusion import isotropic_diffusion_step
+from src.main.python.algorithms.diffusion import isotropic_diffusion_step, anisotropic_diffusion_step
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
 from src.main.python.algorithms.operations_between_images import equalize_histogram, dynamic_range_compression, \
@@ -514,9 +514,10 @@ class MainWindow(QWidget):
 
     def anisotropic_diffusion_method_clicked(self):
         number_of_steps, _ = QInputDialog.getInt(self, "Select number of steps", "Steps", 5)
+        sigma, _ = QInputDialog.getInt(self, "Select Leclerc param", "Sigma", 1)
         diffused_image = self.image
         for i in range(number_of_steps):
-            diffused_image = isotropic_diffusion_step(self.image)
+            diffused_image = anisotropic_diffusion_step(self.image, sigma)
         self.show_result(diffused_image)
 
     def bilateral_filter_clicked(self):
