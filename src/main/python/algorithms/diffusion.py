@@ -5,63 +5,65 @@ from PIL import Image
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
-def calculate_d(i: int, j: int, channel: np.array, direction: str) -> float:
-    h, w = channel.shape
+def calculate_d(x: int, y: int, channel: np.array, direction: str) -> float:
+    w, h = channel.shape
 
     if direction == 'N':
-        if i+1 >= h:
+        if x+1 >= h:
             val = 0
         else:
-            val = channel[i+1, j]
-        return val - channel[i, j]
+            val = channel[x+1, y]
+        return val - channel[x, y]
     elif direction == 'S':
-        if i-1 < 0:
+        if x-1 < 0:
             val = 0
         else:
-            val = channel[i-1, j]
-        return val - channel[i, j]
+            val = channel[x-1, y]
+        return val - channel[x, y]
     elif direction == 'E':
-        if j+1 >= w:
+        if y+1 >= w:
             val = 0
         else:
-            val = channel[i, j+1]
-        return val - channel[i, j]
+            val = channel[x, y+1]
+        return val - channel[x, y]
     elif direction == 'O':
-        if j-1 < 0:
+        if y-1 < 0:
             val = 0
         else:
-            val = channel[i, j-1]
-        return val - channel[i, j]
+            val = channel[x, y-1]
+        return val - channel[x, y]
     else:
         raise ValueError("D directions can only be N, S, E or O")
 
 
 def lecrerc_hof(sigma: float) -> Callable[[float], float]:
     def lecrerc(x: float):
-        return np.exp(-np.power(x/255, 2)/np.power(sigma, 2))
+        return np.exp(-np.power(x, 2)/np.power(sigma, 2))
     return lecrerc
 
 
-def calculate_direction(i: int, j: int, channel: np.array, direction: str,
+def calculate_direction(x: int, y: int, channel: np.array, direction: str,
                         c_calculator: Callable[[float], float]):
-    val = calculate_d(i, j, channel, direction)
+    val = calculate_d(x, y, channel, direction)
     return val * c_calculator(val)
 
 
 def diffusion_step(c_calculator: Callable[[float], float], image: ImageWrapper, step: float) -> ImageWrapper:
     w, h = image.dimensions()
     new_image: ImageWrapper = ImageWrapper.from_dimensions(w, h, image.get_mode())
-
-    new_channels = [np.zeros(shape=(h, w))] * len(image.channels)
-    for (channel, new_channel) in zip(image.channels, new_channels):
-        for i in range(h):
-            for j in range(w):
-                new_channel[i, j] = channel[i, j] + step * (
-                    calculate_direction(i, j, channel, 'N', c_calculator) +
-                    calculate_direction(i, j, channel, 'S', c_calculator) +
-                    calculate_direction(i, j, channel, 'E', c_calculator) +
-                    calculate_direction(i, j, channel, 'O', c_calculator)
+    
+    new_channels = []
+    for channel in image.channels:
+        new_channel = np.zeros(shape=(w, h))
+        for x in range(w):
+            for y in range(h):
+                new_channel[x, y] = channel[x, y] + step * (
+                    calculate_direction(x, y, channel, 'N', c_calculator) +
+                    calculate_direction(x, y, channel, 'S', c_calculator) +
+                    calculate_direction(x, y, channel, 'E', c_calculator) +
+                    calculate_direction(x, y, channel, 'O', c_calculator)
                 )
+        new_channels.append(new_channel)
 
     new_image.channels = new_channels
     new_image.draw_image()

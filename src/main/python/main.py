@@ -603,7 +603,7 @@ class MainWindow(QWidget):
         number_of_steps, _ = QInputDialog.getInt(self, "Select number of steps", "Steps", 5)
         diffused_image = self.image
         for i in range(number_of_steps):
-            diffused_image = isotropic_diffusion_step(self.image)
+            diffused_image = isotropic_diffusion_step(diffused_image)
         self.show_result(diffused_image)
 
     def anisotropic_diffusion_method_clicked(self):
@@ -611,7 +611,8 @@ class MainWindow(QWidget):
         sigma, _ = QInputDialog.getInt(self, "Select Leclerc param", "Sigma", 1)
         diffused_image = self.image
         for i in range(number_of_steps):
-            diffused_image = anisotropic_diffusion_step(self.image, sigma)
+            print(i)
+            diffused_image = anisotropic_diffusion_step(diffused_image, sigma)
         self.show_result(diffused_image)
 
     def bilateral_filter_clicked(self):
