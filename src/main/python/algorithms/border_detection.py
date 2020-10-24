@@ -5,7 +5,7 @@ from PIL.Image import Image
 import numpy as np
 
 
-def apply_mask(channel: Image, x: int, y: int, mask: np.array):
+def apply_mask(channel: np.ndarray, x: int, y: int, mask: np.array):
     h, w = channel.shape
     mask_size = mask.shape[0]
     mask_border_offset = math.floor(mask_size / 2)

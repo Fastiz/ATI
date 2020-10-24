@@ -13,6 +13,7 @@ import src.main.python.algorithms.border_detection as bd
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper
 from src.main.python.algorithms.bilateral_filter import bilateral_filter
+from src.main.python.algorithms.canny_border_detection import canny_border_detection
 from src.main.python.algorithms.diffusion import isotropic_diffusion_step, anisotropic_diffusion_step
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
     exponential_multiplicative_noise, salt_and_pepper
@@ -245,6 +246,8 @@ class MainWindow(QWidget):
         borderDetectionLayout.addWidget(QPushButton("Laplacian of Gaussian", clicked=self.log_border_detection_clicked))
         borderDetectionLayout.addWidget(
             QPushButton("Generic directional operator", clicked=self.generic_derivatives_border_detection_clicked))
+        borderDetectionLayout.addWidget(
+            QPushButton("Canny", clicked=self.canny_border_detection_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
@@ -598,6 +601,12 @@ class MainWindow(QWidget):
         for channel in img_cpy.channels:
             bd.laplace_border_detection(channel, laplace_mask)
         self.show_result(img_cpy)
+
+    def canny_border_detection_clicked(self):
+        sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
+        t1, _ = QInputDialog.getDouble(self, "Select weak threshold", "weak", 100)
+        t2, _ = QInputDialog.getDouble(self, "Select strong threshold", "strong", 200)
+        self.show_result(canny_border_detection(self.image, sigma, t1, t2))
 
     def isotropic_diffusion_method_clicked(self):
         number_of_steps, _ = QInputDialog.getInt(self, "Select number of steps", "Steps", 5)
