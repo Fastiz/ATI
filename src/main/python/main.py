@@ -668,17 +668,19 @@ class MainWindow(QWidget):
         thetaLowerBound = -thetaUpperBound
         thetaStep = 45
 
-        roUpperBound, _ = QInputDialog.getInt(self, "Ro upper bound", "Input value", roUpperBound)
         roLowerBound, _ = QInputDialog.getInt(self, "Ro lower bound", "Input value", roLowerBound)
+        roUpperBound, _ = QInputDialog.getInt(self, "Ro upper bound", "Input value", roUpperBound)
         roStep, _ = QInputDialog.getInt(self, "Ro step", "Input value", roStep)
 
-        thetaUpperBound, _ = QInputDialog.getInt(self, "Theta upper bound", "Input value", thetaUpperBound)
         thetaLowerBound, _ = QInputDialog.getInt(self, "Theta lower bound", "Input value", thetaLowerBound)
+        thetaUpperBound, _ = QInputDialog.getInt(self, "Theta upper bound", "Input value", thetaUpperBound)
         thetaStep, _ = QInputDialog.getInt(self, "Theta step", "Input value", thetaStep)
 
         img = self.image.copy()
 
         bd.hough_transform_line(img.channels[0], roLowerBound, roUpperBound, roStep, thetaLowerBound, thetaUpperBound, thetaStep)
+
+        self.show_result(img)
 
         return
 

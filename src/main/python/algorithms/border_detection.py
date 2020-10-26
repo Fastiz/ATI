@@ -133,10 +133,10 @@ def rotate_matrix(mat):
 
 
 def hough_transform_line(channel: np.ndarray, roLowerBound, roUpperBound, roStep, thetaLowerBound, thetaUpperBound,
-                         thetaStep):
+                         thetaStep, threshold=1):
     h, w = channel.shape
 
-    epsilon = 1 # TODO esto es parametro de entrada?
+    epsilon = 1  # TODO esto es parametro de entrada?
 
     point_list = []
 
@@ -157,7 +157,16 @@ def hough_transform_line(channel: np.ndarray, roLowerBound, roUpperBound, roStep
                 ro = i * roStep
                 theta = j * thetaStep
 
-                if abs(ro - p[0]*math.cos(theta) - p[1]*math.sin(theta)) < epsilon:
+                if abs(ro - p[0] * math.cos(theta) - p[1] * math.sin(theta)) < epsilon:
                     m[i][j] += 1
 
-    return
+    for i in range(m_h):
+        for j in range(m_w):
+            if m[i][j] >= threshold:
+                ro = i * roStep
+                theta = j * thetaStep
+                f = lambda x: ro - x * math.cos(theta)
+                for x in range(w):
+                    y = int(f(x))
+                    if 0 <= y < h:
+                        channel[x, y] = 255
