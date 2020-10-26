@@ -3,6 +3,7 @@ import numpy as np
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
 
+# P(p < K)
 def calculate_pdf(channel: np.array) -> np.array:
     w, h = channel.shape
 
@@ -17,6 +18,7 @@ def calculate_pdf(channel: np.array) -> np.array:
     return np.array([val / count for val in result])
 
 
+# Acum
 def calculate_cdf_from_pdf(pdf: np.array) -> np.array:
     result: np.array = np.zeros(256)
 
@@ -45,8 +47,8 @@ def calculate_new_threshold(channel: np.array, condition: Callable[[float], bool
                 c2 += 1
                 i2 += channel[x, y]
 
-    m1: float = i1/c1
-    m2: float = i2/c2
+    m1: float = i1 / c1
+    m2: float = i2 / c2
 
     return 0.5 * (m1 + m2)
 
@@ -54,12 +56,14 @@ def calculate_new_threshold(channel: np.array, condition: Callable[[float], bool
 def negation_hoc(condition: Callable[[float], bool]) -> Callable[[float], bool]:
     def negation(x: float) -> bool:
         return not condition(x)
+
     return negation
 
 
 def lower_than_hof(value: float) -> Callable[[float], bool]:
     def comparator(x) -> bool:
         return x < value
+
     return comparator
 
 
@@ -77,6 +81,7 @@ def black_mask_hoc(condition: Callable[[float], bool]) -> Callable[[float], floa
         if condition(x):
             return 255
         return 0
+
     return black_mask
 
 
@@ -94,7 +99,8 @@ def get_regions(channel: np.array, t: float, mode: str) -> Tuple[ImageWrapper, I
     return image1, image2
 
 
-def global_thresholding(image: ImageWrapper, starting_t: float, epsilon: float) -> Tuple[ImageWrapper, ImageWrapper, int, int]:
+def global_thresholding(image: ImageWrapper, starting_t: float, epsilon: float) -> Tuple[
+    ImageWrapper, ImageWrapper, int, int]:
     if len(image.channels) > 1:
         raise ValueError("Method only supports one channel")
     channel = image.channels[0]
@@ -124,8 +130,8 @@ def otsu_method(image: ImageWrapper) -> Tuple[ImageWrapper, ImageWrapper, List[i
         variance = []
         for t in range(256):
             nominator = np.power(global_mean * cdf[t] - accum_means[t], 2)
-            denominator = cdf[t]*(1-cdf[t])
-            variance.append(nominator/denominator if not np.isclose(denominator, 0) else 0)
+            denominator = cdf[t] * (1 - cdf[t])
+            variance.append(nominator / denominator if not np.isclose(denominator, 0) else 0)
         variance = np.array(variance)
 
         arg_max = np.argwhere(variance == max(variance))

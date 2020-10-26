@@ -106,7 +106,7 @@ class ImageWrapper:
     def draw_image(self):
         channels = []
         for channel in self.channels:
-            channel_int = self.normalize_channel(np.uint8(channel), 0, 255)
+            channel_int = np.uint8(self.normalize_channel(channel.copy(), 0, 255))
             channels.append(Image.fromarray(channel_int, 'L'))
         self.image_element = Image.merge(self.mode, channels)
         return self.image_element
