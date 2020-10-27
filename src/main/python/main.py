@@ -1,3 +1,4 @@
+import math
 import sys
 
 from PIL import Image
@@ -251,6 +252,8 @@ class MainWindow(QWidget):
             QPushButton("Canny", clicked=self.canny_border_detection_clicked))
         borderDetectionLayout.addWidget(
             QPushButton("Susan", clicked=self.susan_border_detection_clicked))
+        borderDetectionLayout.addWidget(
+            QPushButton("Hough transform (line detection)", clicked=self.hough_transform_line_clicked))
 
 
         borderDetectionTab.setLayout(borderDetectionLayout)
@@ -565,6 +568,7 @@ class MainWindow(QWidget):
             for channel in img_cpy.channels:
                 bd.first_derivative_border_detection(channel, [mask])
             self.show_result(img_cpy, selected_operator_name + " operator (Rotated " + str(i*45) + "º)")
+            print(mask)
             bd.rotate_matrix(mask)
 
     def laplace_border_detection_clicked(self):
@@ -660,6 +664,30 @@ class MainWindow(QWidget):
         self.show_result(image2)
 
         QMessageBox.about(self, "About", 'T=%s' % t)
+
+    def hough_transform_line_clicked(self):
+        roUpperBound = int(math.sqrt(2) * max(self.image.dimensions()))
+        roLowerBound = -roUpperBound
+        roStep = 1
+        thetaUpperBound = 90
+        thetaLowerBound = -thetaUpperBound
+        thetaStep = 45
+
+        roLowerBound, _ = QInputDialog.getInt(self, "Ro lower bound", "Input value", roLowerBound)
+        roUpperBound, _ = QInputDialog.getInt(self, "Ro upper bound", "Input value", roUpperBound)
+        roStep, _ = QInputDialog.getInt(self, "Ro step", "Input value", roStep)
+
+        thetaLowerBound, _ = QInputDialog.getInt(self, "Theta lower bound", "Input value", thetaLowerBound)
+        thetaUpperBound, _ = QInputDialog.getInt(self, "Theta upper bound", "Input value", thetaUpperBound)
+        thetaStep, _ = QInputDialog.getInt(self, "Theta step", "Input value", thetaStep)
+
+        img = self.image.copy()
+
+        bd.hough_transform_line(img.channels[0], roLowerBound, roUpperBound, roStep, thetaLowerBound, thetaUpperBound, thetaStep)
+
+        self.show_result(img)
+
+        return
 
 
 def main():

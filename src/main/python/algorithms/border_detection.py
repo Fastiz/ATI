@@ -30,8 +30,8 @@ def first_derivative_border_detection(channel: np.ndarray, derivative_masks: Lis
             for mask in derivative_masks:
                 derivative_result += apply_mask(channel_cpy, x, y, mask) ** 2
             channel[y, x] = math.sqrt(derivative_result)
-            if channel[y, x] > 255:
-                channel[y, x] = 255
+            """if channel[y, x] > 255:
+                channel[y, x] = 255"""
 
     return channel
 
@@ -50,8 +50,6 @@ def laplace_border_detection(channel: np.ndarray, mask: np.ndarray, threshold: f
     for x in range(w):
         for y in range(h):
             channel[y, x] = 0
-
-    # if abs(channel_matrix[y, x]) + abs(channel_matrix[x + 1, y]) >= threshold:
 
     for x in range(w):
         for y in range(h - 1):
@@ -132,3 +130,43 @@ def rotate_matrix(mat):
         left += 1
 
     return mat
+
+
+def hough_transform_line(channel: np.ndarray, roLowerBound, roUpperBound, roStep, thetaLowerBound, thetaUpperBound,
+                         thetaStep, threshold=1):
+    h, w = channel.shape
+
+    epsilon = 1  # TODO esto es parametro de entrada?
+
+    point_list = []
+
+    for x in range(w):
+        for y in range(h):
+            if channel[x][y] == 255:
+                point_list.append((x, y))
+
+    # FILAS: ro
+    # COLUMNAS: tita
+    m = np.zeros([int(math.ceil((abs(roLowerBound) + abs(roUpperBound)) / roStep)),
+                  int(math.ceil((abs(thetaLowerBound) + abs(thetaUpperBound)) / thetaStep))], dtype=int)
+
+    m_h, m_w = m.shape
+    for i in range(m_h):
+        for j in range(m_w):
+            for p in point_list:
+                ro = i * roStep
+                theta = j * thetaStep
+
+                if abs(ro - p[0] * math.cos(theta) - p[1] * math.sin(theta)) < epsilon:
+                    m[i][j] += 1
+
+    for i in range(m_h):
+        for j in range(m_w):
+            if m[i][j] >= threshold:
+                ro = i * roStep
+                theta = j * thetaStep
+                f = lambda x: ro - x * math.cos(theta)
+                for x in range(w):
+                    y = int(f(x))
+                    if 0 <= y < h:
+                        channel[x, y] = 255
