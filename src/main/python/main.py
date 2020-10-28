@@ -159,6 +159,10 @@ class MainWindow(QWidget):
         # TRANSFORMATIONS
         transformationLayoutt = QHBoxLayout()
 
+        toGrayscaleButton = QPushButton("To Grayscale")
+        toGrayscaleButton.clicked.connect(self.to_grayscale)
+        transformationLayoutt.addWidget(toGrayscaleButton)
+
         contrastButton = QPushButton("Contrast increment")
         contrastButton.clicked.connect(self.contrast_transformation_clicked)
         transformationLayoutt.addWidget(contrastButton)
@@ -661,7 +665,13 @@ class MainWindow(QWidget):
 
         QMessageBox.about(self, "About", 'T=%s' % t)
 
+    def to_grayscale(self):
+        image2 = self.image.copy_mode('L')
+        self.show_result(image2)
+
     def hough_transform_line_clicked(self):
+        img = self.image.copy_mode('L')
+
         roUpperBound = int(math.sqrt(2) * max(self.image.dimensions()))
         roLowerBound = -roUpperBound
         roIntervals = 30
@@ -679,8 +689,6 @@ class MainWindow(QWidget):
         thetaIntervals, _ = QInputDialog.getInt(self, "Theta interval count", "Input value", thetaIntervals)
 
         winnerCount, _ = QInputDialog.getInt(self, "Winner number", "Input value", winnerCount)
-
-        img = self.image.copy()
 
         winners = bd.hough_transform_line(img.channels[0], roLowerBound, roUpperBound, roIntervals, thetaLowerBound,
                                           thetaUpperBound, thetaIntervals, winner_number=winnerCount)
