@@ -254,7 +254,8 @@ class MainWindow(QWidget):
             QPushButton("Susan", clicked=self.susan_border_detection_clicked))
         borderDetectionLayout.addWidget(
             QPushButton("Hough transform (line detection)", clicked=self.hough_transform_line_clicked))
-
+        borderDetectionLayout.addWidget(
+            QPushButton("Hough transform (circle detection)", clicked=self.hough_transform_circunference_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
@@ -567,7 +568,7 @@ class MainWindow(QWidget):
             img_cpy: ImageWrapper = self.image.copy()
             for channel in img_cpy.channels:
                 bd.first_derivative_border_detection(channel, [mask])
-            self.show_result(img_cpy, selected_operator_name + " operator (Rotated " + str(i*45) + "º)")
+            self.show_result(img_cpy, selected_operator_name + " operator (Rotated " + str(i * 45) + "º)")
             print(mask)
             bd.rotate_matrix(mask)
 
@@ -663,26 +664,97 @@ class MainWindow(QWidget):
     def hough_transform_line_clicked(self):
         roUpperBound = int(math.sqrt(2) * max(self.image.dimensions()))
         roLowerBound = -roUpperBound
-        roStep = 1
+        roIntervals = 30
         thetaUpperBound = 90
         thetaLowerBound = -thetaUpperBound
-        thetaStep = 45
+        thetaIntervals = 40
+        winnerCount = 5
 
         roLowerBound, _ = QInputDialog.getInt(self, "Ro lower bound", "Input value", roLowerBound)
         roUpperBound, _ = QInputDialog.getInt(self, "Ro upper bound", "Input value", roUpperBound)
-        roStep, _ = QInputDialog.getInt(self, "Ro step", "Input value", roStep)
+        roIntervals, _ = QInputDialog.getInt(self, "Ro interval count", "Input value", roIntervals)
 
         thetaLowerBound, _ = QInputDialog.getInt(self, "Theta lower bound", "Input value", thetaLowerBound)
         thetaUpperBound, _ = QInputDialog.getInt(self, "Theta upper bound", "Input value", thetaUpperBound)
-        thetaStep, _ = QInputDialog.getInt(self, "Theta step", "Input value", thetaStep)
+        thetaIntervals, _ = QInputDialog.getInt(self, "Theta interval count", "Input value", thetaIntervals)
+
+        winnerCount, _ = QInputDialog.getInt(self, "Winner number", "Input value", winnerCount)
 
         img = self.image.copy()
 
-        bd.hough_transform_line(img.channels[0], roLowerBound, roUpperBound, roStep, thetaLowerBound, thetaUpperBound, thetaStep)
+        winners = bd.hough_transform_line(img.channels[0], roLowerBound, roUpperBound, roIntervals, thetaLowerBound,
+                                          thetaUpperBound, thetaIntervals, winner_number=winnerCount)
 
-        self.show_result(img)
+        import matplotlib.pyplot as plt
 
-        return
+        h, w = img.channels[0].shape
+        for (theta, ro) in winners:
+            theta = np.deg2rad(theta)
+            xs, ys = [], []
+            if math.sin(theta) != 0 and math.cos(theta) != 0:
+                xs = np.linspace(0, w)
+                ys = (-xs * math.cos(theta) + ro) / math.sin(theta)
+            elif math.sin(theta) == 0:
+                xs = np.full((2,), ro)
+                y2 = np.array([0, h])
+            else:
+                xs = np.linspace(0, w)
+                y = np.full((2,), ro)
+
+            plt.plot(xs, ys, '-')
+
+        plt.axis('off')
+        plt.imshow(img.channels[0], cmap='Greys')
+        plt.show()
+
+    def hough_transform_circunference_clicked(self):
+        img = self.image.copy()
+        h, w = img.channels[0].shape
+
+        xLowerBound = 0
+        xUpperBound = w
+        xStep = 10
+
+        yLowerBound = 0
+        yUpperBound = h
+        yStep = 10
+
+        rLowerBound = 1
+        rUpperBound = 50
+        rStep = 5
+
+        winnerCount = 5
+
+        xLowerBound, _ = QInputDialog.getInt(self, "X lower bound", "Input value", xLowerBound)
+        xUpperBound, _ = QInputDialog.getInt(self, "X upper bound", "Input value", xUpperBound)
+        xStep, _ = QInputDialog.getInt(self, "X interval count", "Input value", xStep)
+
+        yLowerBound, _ = QInputDialog.getInt(self, "Y lower bound", "Input value", yLowerBound)
+        yUpperBound, _ = QInputDialog.getInt(self, "Y upper bound", "Input value", yUpperBound)
+        yStep, _ = QInputDialog.getInt(self, "Y interval count", "Input value", yStep)
+
+        rLowerBound, _ = QInputDialog.getInt(self, "R lower bound", "Input value", rLowerBound)
+        rUpperBound, _ = QInputDialog.getInt(self, "R upper bound", "Input value", rUpperBound)
+        rStep, _ = QInputDialog.getInt(self, "R interval count", "Input value", rStep)
+
+        winnerCount, _ = QInputDialog.getInt(self, "Winner number", "Input value", winnerCount)
+
+        img = self.image.copy()
+
+        winners = bd.hough_transform_circunference(img.channels[0], xLowerBound, xUpperBound, xStep, yLowerBound,
+                                                   yUpperBound, yStep, rLowerBound, rUpperBound, rStep,
+                                                   winner_number=winnerCount)
+
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca()
+        for (x, y, r) in winners:
+            circle1 = plt.Circle((x, y), r, fill=False)
+            ax.add_artist(circle1)
+
+        plt.axis('off')
+        plt.imshow(img.channels[0], cmap='Greys')
+        plt.show()
 
 
 def main():
