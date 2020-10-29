@@ -78,7 +78,7 @@ def susan_border_detection(t: int, channel: np.ndarray, s_border: float, s_corne
 def apply_susan_border_detection(t: int, image: ImageWrapper, s_border: float, s_corner: float) -> ImageWrapper:
     channel = image.channels[0]
 
-    channels = [channel, channel.copy(), channel.copy()]
+    channels = [channel.copy(), channel.copy(), channel.copy()]
 
     borders = susan_border_detection(t, channel, s_border, s_corner)
 
@@ -95,8 +95,9 @@ def apply_susan_border_detection(t: int, image: ImageWrapper, s_border: float, s
                 channels[1][x, y] = 0
                 channels[2][x, y] = 255
             else:
-                channels[1][x, y] = 0
-                channels[2][x, y] = 0
+                channels[0][x, y] = channel[x, y]
+                channels[1][x, y] = channel[x, y]
+                channels[2][x, y] = channel[x, y]
 
     image.channels = channels
     image.mode = 'RGB'
