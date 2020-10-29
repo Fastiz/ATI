@@ -220,4 +220,3 @@ def test_run():
         plt.imshow(result.image_element)
         plt.show()
 
-test_run()
