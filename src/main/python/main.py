@@ -721,15 +721,15 @@ class MainWindow(QWidget):
 
         xLowerBound = 0
         xUpperBound = w
-        xStep = 10
+        xStep = 20
 
         yLowerBound = 0
         yUpperBound = h
-        yStep = 10
+        yStep = 20
 
-        rLowerBound = 1
-        rUpperBound = 50
-        rStep = 5
+        rLowerBound = 10
+        rUpperBound = min(w, h)
+        rStep = 20
 
         winnerCount = 5
 
@@ -750,7 +750,7 @@ class MainWindow(QWidget):
         img = self.image.copy()
 
         winners = bd.hough_transform_circunference(img.channels[0], xLowerBound, xUpperBound, xStep, yLowerBound,
-                                                   yUpperBound, yStep, rLowerBound, rUpperBound, rStep,
+                                                   yUpperBound, yStep, rLowerBound, rUpperBound, rStep, epsilon=2,
                                                    winner_number=winnerCount)
 
         import matplotlib.pyplot as plt
