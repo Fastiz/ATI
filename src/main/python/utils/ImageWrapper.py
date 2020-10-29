@@ -59,8 +59,11 @@ class ImageWrapper:
         mode = 'RGB' if mode is None else mode
         return ImageWrapper(Image.new(mode, (w, h)))
 
+    def copy_mode(self, mode: str = 'RGB'):
+        return ImageWrapper(self.image_element.copy().convert(mode), self.file_path, self.filename, self.fileextension, self.memory_only)
+
     def copy(self):
-        return ImageWrapper(self.image_element.copy(), self.file_path, self.filename, self.fileextension, self.memory_only)
+        return self.copy_mode(self.image_element.mode)
 
     def get_pixel(self, x, y):
         val = []

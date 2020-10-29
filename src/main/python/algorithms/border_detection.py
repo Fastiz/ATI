@@ -1,3 +1,4 @@
+import itertools
 import math
 from typing import List
 
@@ -132,41 +133,54 @@ def rotate_matrix(mat):
     return mat
 
 
-def hough_transform_line(channel: np.ndarray, roLowerBound, roUpperBound, roStep, thetaLowerBound, thetaUpperBound,
-                         thetaStep, threshold=1):
+def hough_transform_line(channel: np.ndarray, roLowerBound, roUpperBound, roIntervals, thetaLowerBound, thetaUpperBound,
+                         thetaIntervals, epsilon=1, winner_number=5):
     h, w = channel.shape
 
-    epsilon = 1  # TODO esto es parametro de entrada?
+    thetas = np.linspace(thetaLowerBound, thetaUpperBound, num=thetaIntervals, endpoint=True)
+    ros = np.linspace(roLowerBound, roUpperBound, num=roIntervals, endpoint=True)
 
-    point_list = []
+    accumulator = np.zeros(shape=(thetas.shape[0], ros.shape[0]))
 
-    for x in range(w):
-        for y in range(h):
-            if channel[x][y] == 255:
-                point_list.append((x, y))
+    white_points = [(x, y) for x in range(w) for y in range(h) if channel[y, x] == 255]
 
-    # FILAS: ro
-    # COLUMNAS: tita
-    m = np.zeros([int(math.ceil((abs(roLowerBound) + abs(roUpperBound)) / roStep)),
-                  int(math.ceil((abs(thetaLowerBound) + abs(thetaUpperBound)) / thetaStep))], dtype=int)
+    for i, theta in enumerate(thetas):
+        in_rad = np.deg2rad(theta)
+        for j, ro in enumerate(ros):
+            for (x, y) in white_points:
+                if abs(ro - x * math.cos(in_rad) - y * math.sin(in_rad)) < epsilon:
+                    accumulator[i, j] += 1
 
-    m_h, m_w = m.shape
-    for i in range(m_h):
-        for j in range(m_w):
-            for p in point_list:
-                ro = i * roStep
-                theta = j * thetaStep
+    aux = [(i, j, accumulator[i, j]) for i in range(accumulator.shape[0]) for j in
+           range(accumulator.shape[1])]
+    aux.sort(key=lambda elem: elem[2], reverse=True)
 
-                if abs(ro - p[0] * math.cos(theta) - p[1] * math.sin(theta)) < epsilon:
-                    m[i][j] += 1
+    return [(thetas[index[0]], ros[index[1]]) for index in
+            aux[:winner_number if winner_number < len(aux) else len(aux)]]
 
-    for i in range(m_h):
-        for j in range(m_w):
-            if m[i][j] >= threshold:
-                ro = i * roStep
-                theta = j * thetaStep
-                f = lambda x: ro - x * math.cos(theta)
-                for x in range(w):
-                    y = int(f(x))
-                    if 0 <= y < h:
-                        channel[x, y] = 255
+
+def hough_transform_circunference(channel: np.ndarray, xLowerBound, xUpperBound, xIntervals, yLowerBound, yUpperBound,
+                                  yIntervals, rLowerBound, rUpperBound, rIntervals, epsilon=1, winner_number=5):
+    h, w = channel.shape
+
+    xs = np.linspace(xLowerBound, xUpperBound, num=xIntervals, endpoint=True)
+    ys = np.linspace(yLowerBound, yUpperBound, num=yIntervals, endpoint=True)
+    rs = np.linspace(rLowerBound, rUpperBound, num=rIntervals, endpoint=True)
+
+    accumulator = np.zeros(shape=(xs.shape[0], ys.shape[0], rs.shape[0]))
+
+    white_points = [(x, y) for x in range(w) for y in range(h) if channel[y, x] == 255]
+
+    for i, c_x in enumerate(xs):
+        for j, c_y in enumerate(ys):
+            for k, r in enumerate(rs):
+                for (x, y) in white_points:
+                    if abs((x - c_x) ** 2 + (y - c_y) ** 2 - r ** 2) < epsilon:
+                        accumulator[i, j, k] += 1
+
+    aux = [(i, j, k, accumulator[i, j, k]) for i in range(accumulator.shape[0]) for j in
+           range(accumulator.shape[1]) for k in range(accumulator.shape[2])]
+    aux.sort(key=lambda elem: elem[3], reverse=True)
+
+    return [(xs[index[0]], ys[index[1]], rs[index[2]]) for index in
+            aux[:winner_number if winner_number < len(aux) else len(aux)]]
