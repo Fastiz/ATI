@@ -622,11 +622,11 @@ class MainWindow(QWidget):
         self.show_result(img_cpy)
 
     def canny_border_detection_clicked(self):
-        sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
+        # sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
         t1, _ = QInputDialog.getDouble(self, "Select weak threshold", "weak", 25)
         t2, _ = QInputDialog.getDouble(self, "Select strong threshold", "strong", 50)
 
-        image = canny_border_detection(self.image, sigma, t1, t2)
+        image = canny_border_detection(self.image, t1, t2)
 
         image.draw_image()
 

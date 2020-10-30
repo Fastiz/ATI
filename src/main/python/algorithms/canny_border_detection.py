@@ -3,7 +3,8 @@ from typing import Tuple, List
 from PIL.Image import Image
 
 from src.main.python.algorithms.border_detection import apply_mask
-from src.main.python.algorithms.channel_operations import channel_gaussian_window
+from src.main.python.algorithms.channel_operations import channel_gaussian_window, channel_threshold
+from src.main.python.algorithms.operations_between_images import addition
 from src.main.python.utils import ImageWrapper
 import numpy as np
 
@@ -135,7 +136,31 @@ def clean_image_with_borders(borders: np.ndarray, channel: np.ndarray):
     return channel
 
 
-def canny_border_detection(image: ImageWrapper.ImageWrapper, gauss_sigma, t1, t2) -> ImageWrapper.ImageWrapper:
+def canny_border_detection(image: ImageWrapper.ImageWrapper, t1, t2) -> ImageWrapper.ImageWrapper:
+    results = []
+    for sigma in [1, 3, 6]:
+        results.append(canny_border_detection_wrapper(image, sigma, t1, t2))
+
+    partial_result = addition(results[0], addition(results[1], results[2]))
+
+    new_channels = []
+    for channel in partial_result.channels:
+        new_channel = np.ndarray(shape=channel.shape)
+
+        w, h = channel.shape
+
+        for x in range(w):
+            for y in range(h):
+                new_channel[x, y] = 255 if channel[x, y] > 100 else 0
+
+        new_channels.append(new_channel)
+
+    partial_result.channels = new_channels
+    partial_result.draw_image()
+    return partial_result
+
+
+def canny_border_detection_wrapper(image: ImageWrapper.ImageWrapper, gauss_sigma, t1, t2) -> ImageWrapper.ImageWrapper:
     img: Image = image.image_element
 
     # Applying gaussian filter
