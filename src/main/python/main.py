@@ -813,7 +813,7 @@ class MainWindow(QWidget):
 
         dim = (point_b[0] - point_a[0], point_b[1] - point_a[1])
 
-        border_tracking = BorderTracking(point_a, dim, 150, theta1=(255, 0, 0))
+        border_tracking = BorderTracking(point_a, dim, 150)
 
         for i, img_path in enumerate(self.images_paths):
             startTime = time.time()

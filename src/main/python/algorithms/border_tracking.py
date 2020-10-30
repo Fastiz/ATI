@@ -9,8 +9,8 @@ from src.main.python.utils.ImageWrapper import ImageWrapper
 
 class BorderTracking:
     def __init__(self, start_vertex, rectangle_dim, epsilon, max_iterations=100000, theta1: Tuple[int, int, int] = None):
-        self.start_vertex = start_vertex
-        self.rectangle_dim = rectangle_dim
+        self.start_vertex = (start_vertex[1], start_vertex[0])
+        self.rectangle_dim = (rectangle_dim[1], rectangle_dim[0])
         self.dimensions: Tuple[int, int] = None
         self.lin: List[Tuple[int, int]] = []
         self.lout: List[Tuple[int, int]] = []
