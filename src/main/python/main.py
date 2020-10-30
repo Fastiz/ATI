@@ -1,5 +1,7 @@
 import math
 import sys
+import time
+import threading
 
 from PIL import Image
 from PIL.ImageQt import ImageQt
@@ -12,7 +14,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
 import src.main.python.algorithms.border_detection as bd
 
 from src.main.python import my_config
-from src.main.python.ImageCropper import ImageCropper
+from src.main.python.ImageCropper import ImageCropper, ImageSectionSelectorWindow, ImageCarrousel
 from src.main.python.algorithms.bilateral_filter import bilateral_filter
 from src.main.python.algorithms.canny_border_detection import canny_border_detection
 from src.main.python.algorithms.susan_border_detection import apply_susan_border_detection
@@ -112,6 +114,9 @@ class MainWindow(QWidget):
 
         fileActionsLayout.setAlignment(Qt.AlignBottom)
         fileActionsLayout.addWidget(QPushButton("Change selected file", clicked=self.selectFileButton_clicked))
+
+        fileActionsLayout.addWidget(QPushButton("MULTIPLE", clicked=self.selectMultipleFilesButton_clicked))
+
         fileActionsLayout.addWidget(
             QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
         fileActionsLayout.addWidget(QPushButton("Open in OS image viewer", clicked=self.open_file_clicked))
@@ -763,6 +768,39 @@ class MainWindow(QWidget):
         plt.axis('off')
         plt.imshow(img.channels[0], cmap='Greys')
         plt.show()
+
+    def selectMultipleFilesButton_clicked(self):
+        options = QFileDialog.Options(QFileDialog.ExistingFiles)
+        filePaths, _ = QFileDialog.getOpenFileNames(self, "Select image file", "",
+                                                    "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
+
+        firstImage = ImageWrapper.from_path(filePaths[0])
+
+        self.images_paths = filePaths
+
+        new_image_window = ImageSectionSelectorWindow(firstImage, self.prueba_callback, "Select section")
+        self.imageVisualizerWindows.append(new_image_window)
+        new_image_window.show()
+
+    add_image_to_carrousel_signal = QtCore.pyqtSignal(ImageWrapper, str)
+
+    def prueba_callback(self, points, window):
+        window.close()
+        new_image_window = ImageCarrousel(self)
+        self.imageVisualizerWindows.append(new_image_window)
+
+        new_image_window.show()
+
+        self.image_carroulsel_window = new_image_window
+
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True  # Daemonize thread
+        thread.start()  # Start the execution
+
+    def run(self):
+        for img_path in self.images_paths:
+            time.sleep(1)
+            self.add_image_to_carrousel_signal.emit(ImageWrapper.from_path(img_path), img_path)
 
 
 def main():
