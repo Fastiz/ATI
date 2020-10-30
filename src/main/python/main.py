@@ -641,8 +641,8 @@ class MainWindow(QWidget):
 
     def susan_border_detection_clicked(self):
         t, _ = QInputDialog.getInt(self, "t", "t", 27)
-        s1, _ = QInputDialog.getDouble(self, "s border", "s border", 0.415, decimals=3)
-        s2, _ = QInputDialog.getDouble(self, "s corner", "s corner", 0.6, decimals=3)
+        s1, _ = QInputDialog.getDouble(self, "s border", "s border", 0.25, decimals=3)
+        s2, _ = QInputDialog.getDouble(self, "s corner", "s corner", 0.55, decimals=3)
         self.show_result(apply_susan_border_detection(t, self.image, s1, s2))
 
     def isotropic_diffusion_method_clicked(self):
@@ -811,6 +811,10 @@ class MainWindow(QWidget):
 
         self.points = points
 
+        epsilon, _ = QInputDialog.getDouble(self, "Epsilon", "Epsilon", 150)
+
+        self.epsilon = epsilon
+
         thread = threading.Thread(target=self.run, args=())
         thread.daemon = True  # Daemonize thread
         thread.start()  # Start the execution
@@ -820,7 +824,7 @@ class MainWindow(QWidget):
 
         dim = (point_b[0] - point_a[0], point_b[1] - point_a[1])
 
-        border_tracking = BorderTracking(point_a, dim, 150)
+        border_tracking = BorderTracking(point_a, dim, self.epsilon)
 
         for i, img_path in enumerate(self.images_paths):
             startTime = time.time()

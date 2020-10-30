@@ -85,7 +85,7 @@ class BorderTracking:
             new_lin = self.lin.copy()
 
             for x in self.lout:
-                if self.fd(x) > 0:
+                if self.fd(x) > 0 and x in new_lout:
                     flag = True
                     new_lout.remove(x)
                     new_lin.append(x)
@@ -110,7 +110,7 @@ class BorderTracking:
             self.lin = new_lin.copy()
 
             for x in self.lin:
-                if self.fd(x) < 0:
+                if self.fd(x) < 0 and x in new_lin:
                     flag = True
                     new_lin.remove(x)
                     new_lout.append(x)
@@ -147,7 +147,7 @@ class BorderTracking:
         return False
 
     def n4(self, point: Tuple[int, int]) -> List[Tuple[int, int]]:
-        w, h = self.dimensions
+        h, w = self.dimensions
 
         x, y = point
 
@@ -201,9 +201,9 @@ class BorderTracking:
             channels_copy[2][x, y] = 255
 
         for x, y in self.lin:
-            channels_copy[0][x, y] = 255
-            channels_copy[1][x, y] = 0
-            channels_copy[2][x, y] = 0
+            channels_copy[0][x, y] = 240
+            channels_copy[1][x, y] = 252
+            channels_copy[2][x, y] = 3
 
         return channels_copy
 
