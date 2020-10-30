@@ -94,17 +94,20 @@ class BorderTracking:
                         if n_phi == 3 or n_phi == -3:
                             new_lout.append(n)
 
-                        # Check if n is an interior pixel and remove
-                        if self.phi(n, new_lin, new_lout) == 1:
-                            any_lout = False
-                            for n2 in self.n4(n):
-                                n2_phi = self.phi(n2, new_lin, new_lout)
-                                if n2_phi < 0:
-                                    any_lout = True
-                                    break
+            self.lin = new_lin.copy()
 
-                            if not any_lout:
-                                new_lin.remove(n)
+            for n in self.lin:
+                any_lout = False
+                for n2 in self.n4(n):
+                    n2_phi = self.phi(n2, new_lin, new_lout)
+                    if n2_phi == -1:
+                        any_lout = True
+                        break
+
+                if not any_lout:
+                    new_lin.remove(n)
+
+            self.lin = new_lin.copy()
 
             for x in self.lin:
                 if self.fd(x) < 0:
@@ -116,17 +119,18 @@ class BorderTracking:
                         if n_phi == -3 or n_phi == 3:
                             new_lin.append(n)
 
-                        # Check if n is an exterior pixel and remove
-                        if self.phi(n, new_lin, new_lout) == -1:
-                            any_lin = False
-                            for n2 in self.n4(n):
-                                phi_n2 = self.phi(n2, new_lin, new_lout)
-                                if phi_n2 > 0:
-                                    any_lin = True
-                                    break
+            self.lout = new_lout.copy()
 
-                            if not any_lin:
-                                new_lout.remove(n)
+            for n in self.lout:
+                any_lin = False
+                for n2 in self.n4(n):
+                    n2_phi = self.phi(n2, new_lin, new_lout)
+                    if n2_phi == 1:
+                        any_lin = True
+                        break
+
+                if not any_lin:
+                    new_lout.remove(n)
 
             self.lin = new_lin
             self.lout = new_lout
@@ -220,3 +224,4 @@ def test_run():
         plt.imshow(result.image_element)
         plt.show()
 
+test_run()
