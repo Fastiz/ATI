@@ -16,6 +16,7 @@ import src.main.python.algorithms.border_detection as bd
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper, ImageSectionSelectorWindow, ImageCarrousel
 from src.main.python.algorithms.bilateral_filter import bilateral_filter
+from src.main.python.algorithms.border_tracking import BorderTracking
 from src.main.python.algorithms.canny_border_detection import canny_border_detection
 from src.main.python.algorithms.susan_border_detection import apply_susan_border_detection
 from src.main.python.algorithms.diffusion import isotropic_diffusion_step, anisotropic_diffusion_step
@@ -797,15 +798,23 @@ class MainWindow(QWidget):
         new_image_window.show()
 
         self.image_carroulsel_window = new_image_window
+        self.points = points
 
         thread = threading.Thread(target=self.run, args=())
         thread.daemon = True  # Daemonize thread
         thread.start()  # Start the execution
 
     def run(self):
+        point_a, point_b = self.points
+
+        dim = (point_b[0] - point_a[0], point_b[1] - point_a[1])
+
+        border_tracking = BorderTracking(point_a, dim, 150, theta1=(255, 0, 0))
+
         for img_path in self.images_paths:
-            time.sleep(1)
-            self.add_image_to_carrousel_signal.emit(ImageWrapper.from_path(img_path), img_path)
+            result = border_tracking.next_image(ImageWrapper.from_path(img_path))
+            result.draw_image()
+            self.add_image_to_carrousel_signal.emit(result, img_path)
 
 
 def main():

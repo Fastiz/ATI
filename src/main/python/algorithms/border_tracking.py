@@ -218,10 +218,7 @@ def test_run():
     border_tracking = BorderTracking((102, 340), (200, 100), 150, theta1=(255, 0, 0))
 
     for image in images:
-        print("a")
         result = border_tracking.next_image(image)
         result.draw_image()
         plt.imshow(result.image_element)
         plt.show()
-
-test_run()
