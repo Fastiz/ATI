@@ -622,11 +622,18 @@ class MainWindow(QWidget):
         self.show_result(img_cpy)
 
     def canny_border_detection_clicked(self):
+        gauss_times, _ = QInputDialog.getInt(self, "Amount of gauss filters", "Amount of gauss filters", 1)
+
+        sigmas = []
+        for i in range(gauss_times):
+            sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma " + str(i), 1)
+            sigmas.append(sigma)
+
         # sigma, _ = QInputDialog.getDouble(self, "Select sigma (standard deviation)", "sigma", 1)
         t1, _ = QInputDialog.getDouble(self, "Select weak threshold", "weak", 25)
         t2, _ = QInputDialog.getDouble(self, "Select strong threshold", "strong", 50)
 
-        image = canny_border_detection(self.image, t1, t2)
+        image = canny_border_detection(self.image, t1, t2, sigmas)
 
         image.draw_image()
 

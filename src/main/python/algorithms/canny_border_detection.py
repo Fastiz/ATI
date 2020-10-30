@@ -136,12 +136,14 @@ def clean_image_with_borders(borders: np.ndarray, channel: np.ndarray):
     return channel
 
 
-def canny_border_detection(image: ImageWrapper.ImageWrapper, t1, t2) -> ImageWrapper.ImageWrapper:
+def canny_border_detection(image: ImageWrapper.ImageWrapper, t1, t2, sigmas) -> ImageWrapper.ImageWrapper:
     results = []
-    for sigma in [1, 3, 6]:
+    for sigma in sigmas:
         results.append(canny_border_detection_wrapper(image, sigma, t1, t2))
 
-    partial_result = addition(results[0], addition(results[1], results[2]))
+    partial_result = results[0]
+    for result in results[1:]:
+        partial_result = addition(partial_result, result)
 
     new_channels = []
     for channel in partial_result.channels:
