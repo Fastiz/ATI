@@ -7,19 +7,13 @@ from src.main.python.algorithms.channel_operations import channel_gaussian_windo
 from src.main.python.utils import ImageWrapper
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 
 def directional_derivatives(channel: np.ndarray) -> Tuple[np.array, np.array]:
-    sobel_x_mask = np.array([
-        [-1, -2, -1],
-        [0, 0, 0],
-        [1, 2, 1]
-    ])
+    sobel_x_mask = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], np.float32)
 
-    sobel_y_mask = np.array([
-        [-1, 0, 1],
-        [-2, 0, 2],
-        [-1, 0, 1]
-    ])
+    sobel_y_mask = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], np.float32)
 
     gx = np.ndarray(shape=channel.shape)
     gy = np.ndarray(shape=channel.shape)
@@ -74,11 +68,11 @@ def discrete_slope(slope: np.ndarray):
             if (0 <= s < 22.5) or (157.5 <= s <= 180):
                 result[x, y] = np.array([1, 0])
             elif 22.5 <= s < 67.5:
-                result[x, y] = np.array([1, 1])
+                result[x, y] = np.array([-1, 1])
             elif 67.5 <= s < 112.5:
                 result[x, y] = np.array([0, 1])
             elif 112.5 <= s < 157.5:
-                result[x, y] = np.array([-1, 1])
+                result[x, y] = np.array([-1, -1])
             else:
                 raise Exception("out of range")
 
@@ -102,21 +96,13 @@ def mark_borders(t: int, channel: np.ndarray):
 def is_connected(borders, x, y):
     w, h = borders.shape
 
-    up = (x, y+1)
-    if in_range(w, h, up) and borders[x, y+1] is True:
-        return True
+    for j in range(x - 1, x + 2):
+        for i in range(y - 1, y + 2):
+            if i == y and j == x:
+                continue
 
-    down = (x, y - 1)
-    if in_range(w, h, down) and borders[x, y - 1] is True:
-        return True
-
-    left = (x - 1, y)
-    if in_range(w, h, left) and borders[x - 1, y] is True:
-        return True
-
-    right = (x + 1, y)
-    if in_range(w, h, right) and borders[x + 1, y] is True:
-        return True
+            if in_range(w, h, (j, i)) and borders[j, i]:
+                return True
 
     return False
 
@@ -127,12 +113,12 @@ def weak_borders(t: int, borders: np.ndarray, channel: np.ndarray):
     w, h = channel.shape
     for x in range(w):
         for y in range(h):
-            if not borders[x, y] and channel[x, y] >= t and is_connected(borders, x, y):
+            if (not borders[x, y]) and channel[x, y] >= t and is_connected(borders, x, y):
                 borders[x, y] = True
                 modified = True
 
     if modified:
-        weak_borders(t, borders, channel)
+        return weak_borders(t, borders, channel)
 
     return borders
 
@@ -153,13 +139,22 @@ def canny_border_detection(image: ImageWrapper.ImageWrapper, gauss_sigma, t1, t2
     img: Image = image.image_element
 
     # Applying gaussian filter
-    # img = channel_gaussian_window(img, gauss_sigma)
+    img = channel_gaussian_window(img, gauss_sigma)
 
     # Magnitude and slope
     gx, gy = directional_derivatives(ImageWrapper.ImageWrapper(img).channels[0])
 
     g = np.hypot(gx, gy)
-    g = g / g.max() * 255
+
+    g_max = g.max()
+    g_min = g.min()
+
+    g_w, g_h = g.shape
+
+    for x in range(g_w):
+        for y in range(g_h):
+            g[x, y] = (g[x, y] - g_min) * 255 / (g_max - g_min)
+
     slope = discrete_slope(np.array([val * 180 / np.pi for val in np.arctan2(gy, gx)]))
 
     channel = maximum_suppression(g, slope)
