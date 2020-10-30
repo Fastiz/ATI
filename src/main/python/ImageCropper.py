@@ -1,4 +1,6 @@
-from PyQt5 import QtCore
+import math
+
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
@@ -137,11 +139,21 @@ class ImageCarrousel(QWidget):
 
         self.origin = origin
 
-        origin.add_image_to_carrousel_signal.connect(self.addImage)
+        """origin.add_image_to_carrousel_signal.connect(self.addImage)
+        origin.update_progressbar_signal.connect(self.update_progress)"""
 
         self.initUI()
 
     def initUI(self):
+        self.setStyleSheet(
+            """QFrame {
+                margin: 15px;
+            }""")
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setAlignment(Qt.AlignCenter)
+        self.update_progress(0)
+
         self.scroll = QScrollArea()  # Scroll Area which contains the widgets, set as the centralWidget
         self.widget = QWidget()  # Widget that contains the collection of Vertical Box
         self.hbox = QHBoxLayout()  # The Vertical Box that contains the Horizontal Boxes of  labels and buttons
@@ -155,12 +167,21 @@ class ImageCarrousel(QWidget):
         self.scroll.setWidget(self.widget)
 
         layout = QVBoxLayout(self)
+        layout.addWidget(self.progress_bar)
         layout.addWidget(self.scroll)
 
-        self.setGeometry(600, 100, 1000, 900)
-        self.setWindowTitle('Scroll Area Demonstration')
+        self.setGeometry(600, 100, 2000, 850)
+        self.setWindowTitle('Carrousel')
 
         return
+
+    @QtCore.pyqtSlot(float)
+    def update_progress(self, progress: float):
+        self.progress_bar.setValue(progress)
+        self.progress_bar.setFormat(f"Processing... {round(progress, 2)}%")
+
+        if progress >= 100:
+            self.progress_bar.setVisible(False)
 
     @QtCore.pyqtSlot(ImageWrapper, str)
     def addImage(self, image: ImageWrapper, caption: str = None):
@@ -168,12 +189,16 @@ class ImageCarrousel(QWidget):
             line = QFrame()
             line.setFrameShape(QFrame.VLine);
             line.setFrameShadow(QFrame.Sunken);
-            self.hbox.addWidget(line)
+            self.hbox.insertWidget(0, line)
 
         container = QVBoxLayout()
         container.setAlignment(Qt.AlignVCenter)
         imageSectionSelector = ImageSectionSelector(image)
-        container.addWidget(imageSectionSelector)
+        container.addWidget(imageSectionSelector, alignment=Qt.AlignCenter)
         if caption is not None:
-            container.addWidget(QLabel(caption))
-        self.hbox.addLayout(container)
+            container.addWidget(QLabel(caption), alignment=Qt.AlignCenter)
+
+        container.addWidget(
+            QPushButton("Open in OS image viewer", clicked=(lambda: image.image_element.show())), alignment=Qt.AlignCenter)
+
+        self.hbox.insertLayout(0, container)

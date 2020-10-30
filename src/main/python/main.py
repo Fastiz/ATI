@@ -116,8 +116,6 @@ class MainWindow(QWidget):
         fileActionsLayout.setAlignment(Qt.AlignBottom)
         fileActionsLayout.addWidget(QPushButton("Change selected file", clicked=self.selectFileButton_clicked))
 
-        fileActionsLayout.addWidget(QPushButton("MULTIPLE", clicked=self.selectMultipleFilesButton_clicked))
-
         fileActionsLayout.addWidget(
             QPushButton("Visualize and crop selected image", clicked=self.imageVisualizer_clicked))
         fileActionsLayout.addWidget(QPushButton("Open in OS image viewer", clicked=self.open_file_clicked))
@@ -266,6 +264,8 @@ class MainWindow(QWidget):
             QPushButton("Hough transform (line detection)", clicked=self.hough_transform_line_clicked))
         borderDetectionLayout.addWidget(
             QPushButton("Hough transform (circle detection)", clicked=self.hough_transform_circunference_clicked))
+        borderDetectionLayout.addWidget(
+            QPushButton("Segmentation method (video)", clicked=self.selectMultipleFilesButton_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
@@ -308,7 +308,7 @@ class MainWindow(QWidget):
     def selectFileButton_clicked(self):
         options = QFileDialog.Options()
         filePath, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
-                                                  "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
+                                                  "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW)", options=options)
         if filePath:
             self.loadedImage_changed(ImageWrapper.from_path(filePath))
             return True
@@ -777,19 +777,19 @@ class MainWindow(QWidget):
 
     def selectMultipleFilesButton_clicked(self):
         options = QFileDialog.Options(QFileDialog.ExistingFiles)
-        filePaths, _ = QFileDialog.getOpenFileNames(self, "Select image file", "",
-                                                    "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
+        filePaths, _ = QFileDialog.getOpenFileNames(self, "Select image files", "",
+                                                    "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW)", options=options)
 
-        firstImage = ImageWrapper.from_path(filePaths[0])
+        filePaths.sort()
 
         self.images_paths = filePaths
 
-        new_image_window = ImageSectionSelectorWindow(firstImage, self.prueba_callback, "Select section")
+        new_image_window = ImageSectionSelectorWindow(ImageWrapper.from_path(filePaths[0]), self.prueba_callback, "Select section")
         self.imageVisualizerWindows.append(new_image_window)
         new_image_window.show()
 
     add_image_to_carrousel_signal = QtCore.pyqtSignal(ImageWrapper, str)
-
+    update_progressbar_signal = QtCore.pyqtSignal(float)
     def prueba_callback(self, points, window):
         window.close()
         new_image_window = ImageCarrousel(self)
@@ -798,6 +798,10 @@ class MainWindow(QWidget):
         new_image_window.show()
 
         self.image_carroulsel_window = new_image_window
+
+        self.add_image_to_carrousel_signal.connect(new_image_window.addImage)
+        self.update_progressbar_signal.connect(new_image_window.update_progress)
+
         self.points = points
 
         thread = threading.Thread(target=self.run, args=())
@@ -811,10 +815,13 @@ class MainWindow(QWidget):
 
         border_tracking = BorderTracking(point_a, dim, 150, theta1=(255, 0, 0))
 
-        for img_path in self.images_paths:
+        for i, img_path in enumerate(self.images_paths):
+            startTime = time.time()
             result = border_tracking.next_image(ImageWrapper.from_path(img_path))
             result.draw_image()
-            self.add_image_to_carrousel_signal.emit(result, img_path)
+            self.add_image_to_carrousel_signal.emit(result,
+                                                    f"<b>Frame {i + 1}/{len(self.images_paths)}</b> (Time spent: {round(time.time() - startTime, 2)}s)")
+            self.update_progressbar_signal.emit((i+1)/len(self.images_paths) * 100)
 
 
 def main():
