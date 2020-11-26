@@ -44,8 +44,25 @@ def gaussian_window(channel: np.ndarray, sigma: float):
     return sliding_window(channel, window)
 
 
-def harris_corner_detection(img: ImageWrapper) -> ImageWrapper:
-    channel = img.channels[0]
+def rgb2gray(channels):
+    coefs = [0.2989, 0.5870, 0.1140]
+
+    w, h = channels[0].shape
+
+    result = np.ndarray(shape=channels[0].shape)
+
+    for x in range(w):
+        for y in range(h):
+            result[x, y] = channels[0][x, y] * coefs[0] + channels[1][x, y] * coefs[1] + channels[2][x, y] * coefs[2]
+
+    return result
+
+
+def harris_corner_detection(img: ImageWrapper, percentile: float, gauss_filter_sigma: float, k: float) -> ImageWrapper:
+    if len(img.channels) > 1:
+        channel = rgb2gray(img.channels)
+    else:
+        channel = img.channels[0]
 
     gx, gy = directional_derivatives(channel)
 
@@ -53,7 +70,14 @@ def harris_corner_detection(img: ImageWrapper) -> ImageWrapper:
     iy2 = np.ndarray(shape=channel.shape)
     ixy = np.ndarray(shape=channel.shape)
 
-    h, w = channel.shape
+    w, h = channel.shape
+
+    im = ImageWrapper.from_dimensions(h, w)
+    im.channels = [channel, channel, channel]
+    im.draw_image()
+    plt.imshow(im.image_element)
+
+    plt.show()
 
     for x in range(w):
         for y in range(h):
@@ -61,11 +85,9 @@ def harris_corner_detection(img: ImageWrapper) -> ImageWrapper:
             iy2[x, y] = np.power(gy[x, y], 2)
             ixy[x, y] = gx[x, y] * gy[x, y]
 
-    ix2 = gaussian_window(ix2, 1)
-    iy2 = gaussian_window(iy2, 1)
-    ixy = gaussian_window(ixy, 1)
-
-    k = 0.04
+    ix2 = gaussian_window(ix2, gauss_filter_sigma)
+    iy2 = gaussian_window(iy2, gauss_filter_sigma)
+    ixy = gaussian_window(ixy, gauss_filter_sigma)
 
     r = np.ndarray(shape=channel.shape)
 
@@ -74,34 +96,38 @@ def harris_corner_detection(img: ImageWrapper) -> ImageWrapper:
             r[x, y] = (ix2[x, y] * iy2[x, y] - np.power(ixy[x, y], 2)) - k * np.power(ix2[x, y] + iy2[x, y], 2)
 
     r_max = r.max()
+    r_min = r.min()
 
-    print(r_max)
-
-    new_img = ImageWrapper.from_dimensions(w, h, 'RGB')
+    normalized_r = np.ndarray(shape=r.shape)
     for x in range(w):
         for y in range(h):
-            if r[x, y] >= 0.002 * r_max:
+            normalized_r[x, y] = 255 * (r[x, y] - r_min) / (r_max - r_min)
+
+    imr = ImageWrapper.from_dimensions(w, h)
+    imr.channels = [normalized_r, normalized_r, normalized_r]
+    imr.draw_image()
+    plt.imshow(imr.image_element)
+
+    plt.show()
+
+    r_threshold = np.percentile(r, percentile)
+
+    print(r_threshold)
+
+    new_img = ImageWrapper.from_dimensions(h, w, 'RGB')
+    for x in range(w):
+        for y in range(h):
+            if r[x, y] >= r_threshold:
                 new_img.channels[0][x, y] = 255
                 new_img.channels[1][x, y] = 0
                 new_img.channels[2][x, y] = 0
             else:
                 for i in range(3):
-                    new_img.channels[i][x, y] = channel[x, y]
+                    if len(img.channels) > 1:
+                        new_img.channels[i][x, y] = img.channels[i][x, y]
+                    else:
+                        new_img.channels[i][x, y] = channel[x, y]
 
     new_img.draw_image()
 
     return new_img
-
-
-def harris_test():
-    img = ImageWrapper.from_path("/home/fastiz/Documentos/Facultad/ATI/images/TEST.pgm")
-    plt.imshow(harris_corner_detection(img).image_element)
-
-    # img.channels = [gaussian_window(img.channels[0], 2)]
-    # img.draw_image()
-    #
-    # plt.imshow(img.image_element)
-    plt.show()
-
-
-harris_test()

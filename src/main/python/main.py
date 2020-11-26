@@ -18,6 +18,7 @@ from src.main.python.ImageCropper import ImageCropper, ImageSectionSelectorWindo
 from src.main.python.algorithms.bilateral_filter import bilateral_filter
 from src.main.python.algorithms.border_tracking import BorderTracking
 from src.main.python.algorithms.canny_border_detection import canny_border_detection
+from src.main.python.algorithms.harris_corner_detection import harris_corner_detection
 from src.main.python.algorithms.susan_border_detection import apply_susan_border_detection
 from src.main.python.algorithms.diffusion import isotropic_diffusion_step, anisotropic_diffusion_step
 from src.main.python.algorithms.noise_image import gaussian_additive_noise, rayleigh_multiplicative_noise, \
@@ -266,6 +267,8 @@ class MainWindow(QWidget):
             QPushButton("Hough transform (circle detection)", clicked=self.hough_transform_circunference_clicked))
         borderDetectionLayout.addWidget(
             QPushButton("Segmentation method (video)", clicked=self.selectMultipleFilesButton_clicked))
+        borderDetectionLayout.addWidget(
+            QPushButton("Harris corner detection", clicked=self.harris_corner_detection_clicked))
 
         borderDetectionTab.setLayout(borderDetectionLayout)
         self.tabLayout.addTab(borderDetectionTab, "Border detection")
@@ -308,7 +311,7 @@ class MainWindow(QWidget):
     def selectFileButton_clicked(self):
         options = QFileDialog.Options()
         filePath, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
-                                                  "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW)", options=options)
+                                                  "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW *.png)", options=options)
         if filePath:
             self.loadedImage_changed(ImageWrapper.from_path(filePath))
             return True
@@ -782,10 +785,18 @@ class MainWindow(QWidget):
         plt.imshow(img.channels[0], cmap='Greys')
         plt.show()
 
+
+    def harris_corner_detection_clicked(self):
+        percentile, _ = QInputDialog.getDouble(self, "Corner percentile", "Percentile", 98.8)
+        gauss_filter_sigma, _ = QInputDialog.getDouble(self, "Gauss filter", "Sigma", 1)
+        k, _ = QInputDialog.getDouble(self, "K", "K", 0.04, decimals=5)
+        self.show_result(harris_corner_detection(self.image, percentile, gauss_filter_sigma, k), "Harris corner detection")
+
+
     def selectMultipleFilesButton_clicked(self):
         options = QFileDialog.Options(QFileDialog.ExistingFiles)
         filePaths, _ = QFileDialog.getOpenFileNames(self, "Select image files", "",
-                                                    "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW)", options=options)
+                                                    "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW *.png)", options=options)
 
         filePaths.sort()
 

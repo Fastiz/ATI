@@ -64,7 +64,7 @@ class MultipleImageSelector(QWidget):
             options = QFileDialog.Options()
             # options |= QFileDialog.DontUseNativeDialog
             file_path, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
-                                                       "Images (*.jpg *.raw *.ppm *.pgm *.RAW)", options=options)
+                                                       "Images (*.jpg *.raw *.ppm *.pgm *.RAW *.png)", options=options)
             if file_path:
 
                 self.paths[path_index] = file_path
