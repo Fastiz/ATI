@@ -518,6 +518,16 @@ class MainWindow(QWidget):
 
         self.show_result(img_cpy)
 
+    def showMessage(self, message: str, title: str = "Message"):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+
+        msg.setText(message)
+        msg.setWindowTitle(title)
+        msg.setStandardButtons(QMessageBox.Ok)
+
+        msg.exec_()
+
     def askForInt(self, message: str, default: int = 1, min: int = 1, max: int = 2147483647):
         intVal, _ = QInputDialog.getInt(self, "Enter integer value", message, default, min=min, max=max)
         return intVal
