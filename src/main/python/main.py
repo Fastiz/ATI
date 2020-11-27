@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
     QLabel, QPushButton, QInputDialog, QTabWidget, QMessageBox
 
 import src.main.python.algorithms.border_detection as bd
+from src.main.python.components.TwoImageSelector import TwoImagesSelector
 
 from src.main.python import my_config
 from src.main.python.ImageCropper import ImageCropper, ImageSectionSelectorWindow, ImageCarrousel
@@ -137,6 +138,7 @@ class MainWindow(QWidget):
         filterTab = QWidget()
         borderDetectionTab = QWidget()
         thresholdingTab = QWidget()
+        objectDetectionTab = QWidget()
 
         algorithmsLayout = QHBoxLayout()
 
@@ -282,12 +284,29 @@ class MainWindow(QWidget):
         thresholdingTab.setLayout(thresholdingDetectionLayout)
         self.tabLayout.addTab(thresholdingTab, "Thresholding")
 
+
+
+
+        objectDetectionLayout = QHBoxLayout()
+
+        siftButton = QPushButton("SIFT")
+        siftButton.clicked.connect(self.sift_clicked)
+        objectDetectionLayout.addWidget(siftButton)
+
+        objectDetectionTab.setLayout(objectDetectionLayout)
+        self.tabLayout.addTab(objectDetectionTab, "Object detection")
+
         # ALGORITHMS
 
         mainLayout.addWidget(self.tabLayout)
 
         self.setLayout(mainLayout)
         self.show()
+
+    def sift_clicked(self):
+        sift_window = TwoImagesSelector(2, "SIFT")
+        self.imageVisualizerWindows.append(sift_window)
+        sift_window.show()
 
     def open_file_clicked(self):
         self.image.image_element.show()
@@ -690,6 +709,7 @@ class MainWindow(QWidget):
         image2 = self.image.copy_mode('L')
         self.show_result(image2)
 
+    # 40 20 epsilon3
     def hough_transform_line_clicked(self):
         img = self.image.copy_mode('L')
 
@@ -700,6 +720,7 @@ class MainWindow(QWidget):
         thetaLowerBound = -thetaUpperBound
         thetaIntervals = 40
         winnerCount = 5
+        epsilon = 5.0
 
         roLowerBound, _ = QInputDialog.getInt(self, "Ro lower bound", "Input value", roLowerBound)
         roUpperBound, _ = QInputDialog.getInt(self, "Ro upper bound", "Input value", roUpperBound)
@@ -711,8 +732,10 @@ class MainWindow(QWidget):
 
         winnerCount, _ = QInputDialog.getInt(self, "Winner number", "Input value", winnerCount)
 
+        epsilon, _ = QInputDialog.getDouble(self, "Epsilon", "Input value", epsilon)
+
         winners = bd.hough_transform_line(img.channels[0], roLowerBound, roUpperBound, roIntervals, thetaLowerBound,
-                                          thetaUpperBound, thetaIntervals, winner_number=winnerCount)
+                                          thetaUpperBound, thetaIntervals, winner_number=winnerCount, epsilon=epsilon)
 
         import matplotlib.pyplot as plt
 
@@ -725,16 +748,18 @@ class MainWindow(QWidget):
                 ys = (-xs * math.cos(theta) + ro) / math.sin(theta)
             elif math.sin(theta) == 0:
                 xs = np.full((2,), ro)
-                y2 = np.array([0, h])
+                ys = np.array([0, h])
             else:
                 xs = np.linspace(0, w)
-                y = np.full((2,), ro)
+                ys = np.full((2,), ro)
 
             plt.plot(xs, ys, '-')
+            plt.axis('off')
+            plt.imshow(img.channels[0], cmap='Greys')
+            plt.show()
+            print("asd")
 
-        plt.axis('off')
-        plt.imshow(img.channels[0], cmap='Greys')
-        plt.show()
+
 
     def hough_transform_circunference_clicked(self):
         img = self.image.copy()
@@ -754,6 +779,8 @@ class MainWindow(QWidget):
 
         winnerCount = 5
 
+        epsilon = 10.0
+
         xLowerBound, _ = QInputDialog.getInt(self, "X lower bound", "Input value", xLowerBound)
         xUpperBound, _ = QInputDialog.getInt(self, "X upper bound", "Input value", xUpperBound)
         xStep, _ = QInputDialog.getInt(self, "X interval count", "Input value", xStep)
@@ -768,22 +795,33 @@ class MainWindow(QWidget):
 
         winnerCount, _ = QInputDialog.getInt(self, "Winner number", "Input value", winnerCount)
 
+        epsilon, _ = QInputDialog.getDouble(self, "Epsilon", "Input value", epsilon)
+
         img = self.image.copy()
 
+        # 30 30 30 11 / 8 (solo)
         winners = bd.hough_transform_circunference(img.channels[0], xLowerBound, xUpperBound, xStep, yLowerBound,
-                                                   yUpperBound, yStep, rLowerBound, rUpperBound, rStep, epsilon=2,
+                                                   yUpperBound, yStep, rLowerBound, rUpperBound, rStep, epsilon=epsilon,
                                                    winner_number=winnerCount)
 
         import matplotlib.pyplot as plt
 
         ax = plt.gca()
         for (x, y, r) in winners:
-            circle1 = plt.Circle((x, y), r, fill=False)
+            circle1 = plt.Circle((x, y), r, color='r', fill=False)
             ax.add_artist(circle1)
 
         plt.axis('off')
         plt.imshow(img.channels[0], cmap='Greys')
         plt.show()
+
+
+    def SIFT_clicked(self):
+        """img1 = cv2.imread('eiffel_2.jpeg')
+        img2 = cv2.imread('eiffel_1.jpg')
+
+        sift = cv2.SIFT_create()
+        sift = cv2.xfeatures2d.SIFT_create()"""
 
 
     def harris_corner_detection_clicked(self):
