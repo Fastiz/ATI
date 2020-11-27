@@ -1,5 +1,9 @@
+import cv2
+import numpy
+from PIL import Image
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QDesktopWidget
 
+from src.main.python import my_config
 from src.main.python.components.ImageSectionSelector import ImageSectionSelector
 from src.main.python.utils.ImageWrapper import ImageWrapper
 
@@ -17,6 +21,10 @@ class ImageSectionSelectorWithLoaderButton(QWidget):
         btnLoad = QPushButton("Load image")
         btnLoad.clicked.connect(self.onSelectButtonClicked)
         self.layout.addWidget(btnLoad)
+
+        self.viewerLayout = QVBoxLayout()
+
+        self.layout.addLayout(self.viewerLayout)
 
         self.imageSectionSelector = None
         self.image = None
@@ -62,11 +70,13 @@ class ImageSectionSelectorWithLoaderButton(QWidget):
         if filePath:
             self.image = ImageWrapper.from_path(filePath)
 
-            self.layout.removeWidget(self.imageSectionSelector)
+            for i in reversed(range(self.viewerLayout.count())):
+                self.viewerLayout.itemAt(i).widget().setParent(None)
 
             self.imageSectionSelector = ImageSectionSelector(self.image)
 
-            self.layout.addWidget(self.imageSectionSelector)
+            self.viewerLayout.addWidget(self.imageSectionSelector)
+
 
 class TwoImagesSelector(QWidget):
     def __init__(self, image_count: int, window_title: str = "Image Selection"):
@@ -102,6 +112,40 @@ class TwoImagesSelector(QWidget):
         self.move(qr.topLeft())
 
     def on_save_clicked(self):
+        sift = cv2.SIFT_create()
         # GetImage devuelve PIL Image, no ImageWrapper
-        for selector in self.selectors:
-            selector.getImage().show()
+
+        threshold = my_config.MainWindowSelf.askForFloat("Enter distance threshold", 500)
+        howManyToMatch = my_config.MainWindowSelf.askForInt("Enter minimum number of valid matches to consider equality", 50)
+
+        open_cv_image_1 = numpy.array(self.selectors[0].getImage())[:, :, ::-1].copy()
+        open_cv_image_2 = numpy.array(self.selectors[1].getImage())[:, :, ::-1].copy()
+
+        img1 = cv2.cvtColor(open_cv_image_1, cv2.COLOR_BGR2GRAY)
+        img2 = cv2.cvtColor(open_cv_image_2, cv2.COLOR_BGR2GRAY)
+
+        keypoints_1, descriptors_1 = sift.detectAndCompute(img1, None)
+        keypoints_2, descriptors_2 = sift.detectAndCompute(img2, None)
+
+        # feature matching
+        bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+
+        matches = bf.match(descriptors_1, descriptors_2)
+        matches = sorted(matches, key=lambda x: x.distance)
+
+        passing_matches = []
+        for match in matches:
+            if match.distance <= threshold:
+                passing_matches.append(match)
+
+        if len(passing_matches) >= howManyToMatch:
+            my_config.MainWindowSelf.showMessage(f"Image matchs ({len(passing_matches)} passing matches / {len(matches)} total)", "SIFT result")
+        else:
+            my_config.MainWindowSelf.showMessage("Image does not match", "SIFT result")
+
+        img3 = cv2.drawMatches(img1, keypoints_1, img2, keypoints_2, passing_matches[:50], img2, flags=2)
+
+        Image.fromarray(img3).show()
+
+        """for selector in self.selectors:
+            selector.getImage().show()"""
