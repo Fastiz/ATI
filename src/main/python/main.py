@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QVBoxLayout, QHB
     QLabel, QPushButton, QInputDialog, QTabWidget, QMessageBox
 
 import src.main.python.algorithms.border_detection as bd
+import src.main.python.algorithms.object_recognition_algorithms as object_recognition_algorithms
 from src.main.python.components.TwoImageSelector import TwoImagesSelector
 
 from src.main.python import my_config
@@ -284,14 +285,19 @@ class MainWindow(QWidget):
         thresholdingTab.setLayout(thresholdingDetectionLayout)
         self.tabLayout.addTab(thresholdingTab, "Thresholding")
 
-
-
-
         objectDetectionLayout = QHBoxLayout()
 
         siftButton = QPushButton("SIFT")
         siftButton.clicked.connect(self.sift_clicked)
         objectDetectionLayout.addWidget(siftButton)
+
+        kazeButton = QPushButton("KAZE")
+        kazeButton.clicked.connect(self.kaze_clicked)
+        objectDetectionLayout.addWidget(kazeButton)
+
+        akazeButton = QPushButton("AKAZE")
+        akazeButton.clicked.connect(self.akaze_clicked)
+        objectDetectionLayout.addWidget(akazeButton)
 
         objectDetectionTab.setLayout(objectDetectionLayout)
         self.tabLayout.addTab(objectDetectionTab, "Object detection")
@@ -304,7 +310,17 @@ class MainWindow(QWidget):
         self.show()
 
     def sift_clicked(self):
-        sift_window = TwoImagesSelector(2, "SIFT")
+        sift_window = TwoImagesSelector(2, object_recognition_algorithms.sift, "SIFT")
+        self.imageVisualizerWindows.append(sift_window)
+        sift_window.show()
+
+    def akaze_clicked(self):
+        sift_window = TwoImagesSelector(2, object_recognition_algorithms.akaze, "AKAZE")
+        self.imageVisualizerWindows.append(sift_window)
+        sift_window.show()
+
+    def kaze_clicked(self):
+        sift_window = TwoImagesSelector(2, object_recognition_algorithms.kaze, "KAZE")
         self.imageVisualizerWindows.append(sift_window)
         sift_window.show()
 
@@ -330,7 +346,8 @@ class MainWindow(QWidget):
     def selectFileButton_clicked(self):
         options = QFileDialog.Options()
         filePath, _ = QFileDialog.getOpenFileName(self, "Select image file", "",
-                                                  "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW *.png)", options=options)
+                                                  "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW *.png)",
+                                                  options=options)
         if filePath:
             self.loadedImage_changed(ImageWrapper.from_path(filePath))
             return True
@@ -769,8 +786,6 @@ class MainWindow(QWidget):
             plt.show()
             print("asd")
 
-
-
     def hough_transform_circunference_clicked(self):
         img = self.image.copy()
         h, w = img.channels[0].shape
@@ -825,37 +840,31 @@ class MainWindow(QWidget):
         plt.imshow(img.channels[0], cmap='Greys')
         plt.show()
 
-
-    def SIFT_clicked(self):
-        """img1 = cv2.imread('eiffel_2.jpeg')
-        img2 = cv2.imread('eiffel_1.jpg')
-
-        sift = cv2.SIFT_create()
-        sift = cv2.xfeatures2d.SIFT_create()"""
-
-
     def harris_corner_detection_clicked(self):
         percentile, _ = QInputDialog.getDouble(self, "Corner percentile", "Percentile", 98.8)
         gauss_filter_sigma, _ = QInputDialog.getDouble(self, "Gauss filter", "Sigma", 1)
         k, _ = QInputDialog.getDouble(self, "K", "K", 0.04, decimals=5)
-        self.show_result(harris_corner_detection(self.image, percentile, gauss_filter_sigma, k), "Harris corner detection")
-
+        self.show_result(harris_corner_detection(self.image, percentile, gauss_filter_sigma, k),
+                         "Harris corner detection")
 
     def selectMultipleFilesButton_clicked(self):
         options = QFileDialog.Options(QFileDialog.ExistingFiles)
         filePaths, _ = QFileDialog.getOpenFileNames(self, "Select image files", "",
-                                                    "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW *.png)", options=options)
+                                                    "Images (*.jpg *.jpeg *.raw *.ppm *.pgm *.RAW *.png)",
+                                                    options=options)
 
         filePaths.sort()
 
         self.images_paths = filePaths
 
-        new_image_window = ImageSectionSelectorWindow(ImageWrapper.from_path(filePaths[0]), self.prueba_callback, "Select section")
+        new_image_window = ImageSectionSelectorWindow(ImageWrapper.from_path(filePaths[0]), self.prueba_callback,
+                                                      "Select section")
         self.imageVisualizerWindows.append(new_image_window)
         new_image_window.show()
 
     add_image_to_carrousel_signal = QtCore.pyqtSignal(ImageWrapper, str)
     update_progressbar_signal = QtCore.pyqtSignal(float)
+
     def prueba_callback(self, points, window):
         window.close()
         new_image_window = ImageCarrousel(self)
@@ -891,7 +900,7 @@ class MainWindow(QWidget):
             result.draw_image()
             self.add_image_to_carrousel_signal.emit(result,
                                                     f"<b>Frame {i + 1}/{len(self.images_paths)}</b> (Time spent: {round(time.time() - startTime, 2)}s)")
-            self.update_progressbar_signal.emit((i+1)/len(self.images_paths) * 100)
+            self.update_progressbar_signal.emit((i + 1) / len(self.images_paths) * 100)
 
 
 def main():
