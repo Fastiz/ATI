@@ -291,6 +291,10 @@ class MainWindow(QWidget):
         siftButton.clicked.connect(self.sift_clicked)
         objectDetectionLayout.addWidget(siftButton)
 
+        surfButton = QPushButton("SURF")
+        surfButton.clicked.connect(self.surf_clicked)
+        objectDetectionLayout.addWidget(surfButton)
+
         kazeButton = QPushButton("KAZE")
         kazeButton.clicked.connect(self.kaze_clicked)
         objectDetectionLayout.addWidget(kazeButton)
@@ -313,6 +317,11 @@ class MainWindow(QWidget):
         sift_window = TwoImagesSelector(2, object_recognition_algorithms.sift, "SIFT")
         self.imageVisualizerWindows.append(sift_window)
         sift_window.show()
+
+    def surf_clicked(self):
+        surf_window = TwoImagesSelector(2, object_recognition_algorithms.surf, "SURF")
+        self.imageVisualizerWindows.append(surf_window)
+        surf_window.show()
 
     def akaze_clicked(self):
         sift_window = TwoImagesSelector(2, object_recognition_algorithms.akaze, "AKAZE")
