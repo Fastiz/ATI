@@ -1,4 +1,5 @@
 from src.experiments.algorithms import *
+import numpy as np
 
 
 def algorithm_to_color(algorithm):
@@ -14,3 +15,12 @@ def algorithm_to_color(algorithm):
 
 def img_from_file(path):
     return cv2.imread(path)
+
+
+def normalize(values):
+    max_value = max(values)
+    min_value = min(values)
+
+    return [(x - min_value) / (max_value - min_value) for x in values]
+
+

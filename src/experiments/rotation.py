@@ -3,10 +3,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from src.experiments.algorithms import *
-
-
-# https://stackoverflow.com/questions/9041681/opencv-python-rotate-image-by-x-degrees-around-specific-point
-from src.experiments.utils import algorithm_to_color, img_from_file
+from src.experiments.metrics import distance_avg_metric
+from src.experiments.utils import algorithm_to_color, img_from_file, normalize
 
 
 def rotate_image(image, angle):
@@ -16,7 +14,7 @@ def rotate_image(image, angle):
     return result
 
 
-def algorithm_rotation_test(algorithm, angle, img, threshold):
+def algorithm_rotation_test(algorithm, angle, img, metric):
     h, w, _ = img.shape
 
     matches_list = []
@@ -32,7 +30,7 @@ def algorithm_rotation_test(algorithm, angle, img, threshold):
 
         matches_list.append(new_matches)
 
-    return [sum(map(lambda m: m.distance < threshold, matches)) for matches in matches_list], times_list
+    return [metric(matches) for matches in matches_list], times_list
 
 
 def run():
@@ -40,21 +38,21 @@ def run():
 
     algorithms = [surf, sift, kaze, akaze]
 
-    angles = np.arange(0, 360, 45)
+    angles = np.arange(0, 360, 5)
 
     match_results = []
     time_results = []
     for a in algorithms:
         print("{0} / {1}".format(algorithms.index(a) + 1, len(algorithms)))
-        match, t = algorithm_rotation_test(a, angles, img, 500)
-
+        match, t = algorithm_rotation_test(a, angles, img, distance_avg_metric())
+        print(match)
         match_results.append(match)
         time_results.append(t)
 
     plt.figure()
 
     for r, i in zip(match_results, range(len(match_results))):
-        plt.plot(angles, r, algorithm_to_color(algorithms[i]))
+        plt.plot(angles, normalize(r), algorithm_to_color(algorithms[i]))
 
     plt.figure()
 
@@ -65,3 +63,5 @@ def run():
 
 
 run()
+
+# TODO PROMEDIO DE ERROR / ANGULO
