@@ -27,5 +27,16 @@ def kaze(img1, img2):
 
 
 def akaze(img1, img2):
-    return base_algorithm(cv2.AKAZE_create(), img1, img2)
+    method = cv2.AKAZE_create()
+
+    keypoints_1, descriptors_1 = method.detectAndCompute(img1, None)
+    keypoints_2, descriptors_2 = method.detectAndCompute(img2, None)
+
+    # feature matching
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
+
+    matches = bf.match(descriptors_1, descriptors_2)
+    matches = sorted(matches, key=lambda x: x.distance)
+
+    return matches
 

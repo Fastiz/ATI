@@ -7,7 +7,31 @@ import cv2
 from src.experiments.utils import algorithm_to_color, img_from_file
 
 
-def algorithm_scale_test(algorithm, percentages, img, threshold):
+def best_n_metric(n):
+    def metric(matches):
+        return sum([m.distance for m in matches[0:n]])
+    return metric
+
+
+def threshold_metric(threshold):
+    def metric(matches):
+        return sum(map(lambda m: m.distance < threshold, matches))
+    return metric
+
+
+def distance_sum_metric():
+    def metric(matches):
+        return best_n_metric(len(matches))(matches)
+    return metric
+
+
+def distance_avg_metric():
+    def metric(matches):
+        return distance_sum_metric()(matches) / float(len(matches))
+    return metric
+
+
+def algorithm_scale_test(algorithm, percentages, img, metric):
 
     h, w, _ = img.shape
 
@@ -24,7 +48,7 @@ def algorithm_scale_test(algorithm, percentages, img, threshold):
 
         matches_list.append(new_matches)
 
-    return [sum(map(lambda m: m.distance < threshold, matches)) for matches in matches_list], times_list
+    return [metric(matches) for matches in matches_list], times_list
 
 
 def run():
@@ -38,7 +62,7 @@ def run():
     time_results = []
     for a in algorithms:
         print("{0} / {1}".format(algorithms.index(a) + 1, len(algorithms)))
-        match, t = algorithm_scale_test(a, percentages, img, 500)
+        match, t = algorithm_scale_test(a, percentages, img, distance_avg_metric())
 
         match_results.append(match)
         time_results.append(t)
