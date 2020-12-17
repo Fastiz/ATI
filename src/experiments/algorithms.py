@@ -39,4 +39,3 @@ def akaze(img1, img2):
     matches = sorted(matches, key=lambda x: x.distance)
 
     return matches
-

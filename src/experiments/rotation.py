@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from src.experiments.algorithms import *
 from src.experiments.metrics import distance_avg_metric
-from src.experiments.utils import algorithm_to_color, img_from_file, normalize
+from src.experiments.utils import algorithm_to_color, img_from_file, normalize, algorithm_name
 
 
 def rotate_image(image, angle):
@@ -37,6 +37,7 @@ def run():
     img = img_from_file('../../images/Lenaclor.ppm')
 
     algorithms = [surf, sift, kaze, akaze]
+    #algorithms = [kaze, akaze]
 
     angles = np.arange(0, 360, 5)
 
@@ -49,15 +50,30 @@ def run():
         match_results.append(match)
         time_results.append(t)
 
-    plt.figure()
+    fig = plt.figure()
+    fig.suptitle('../../images/Lenaclor.ppm')
+    plt.xlabel('Angulo de rotación (grados)')
+    plt.ylabel('Distancia promedio entre todos los matches')
 
+    legends = []
     for r, i in zip(match_results, range(len(match_results))):
         plt.plot(angles, normalize(r), algorithm_to_color(algorithms[i]))
+        legends.append(algorithm_name(algorithms[i]))
 
-    plt.figure()
+    plt.legend(legends)
+    plt.show()
 
+    fig = plt.figure()
+    fig.suptitle('../../images/Lenaclor.ppm')
+    plt.xlabel('Angulo de rotación (grados)')
+    plt.ylabel('Tiempo de procesamiento')
+
+    legends = []
     for t, i in zip(time_results, range(len(time_results))):
         plt.plot(angles, t, algorithm_to_color(algorithms[i]))
+        legends.append(algorithm_name(algorithms[i]))
+
+    plt.legend(legends)
 
     plt.show()
 
