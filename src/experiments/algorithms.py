@@ -29,6 +29,3 @@ def kaze(img1, img2):
 def akaze(img1, img2):
     return base_algorithm(cv2.AKAZE_create(), img1, img2)
 
-
-def img_from_file(path):
-    return cv2.imread(path)

@@ -1,24 +1,32 @@
+import time
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from src.experiments.algorithms import *
-import time
-import cv2
 
+
+# https://stackoverflow.com/questions/9041681/opencv-python-rotate-image-by-x-degrees-around-specific-point
 from src.experiments.utils import algorithm_to_color, img_from_file
 
 
-def algorithm_scale_test(algorithm, percentages, img, threshold):
+def rotate_image(image, angle):
+    image_center = tuple(np.array(image.shape[1::-1]) / 2)
+    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+    return result
 
+
+def algorithm_rotation_test(algorithm, angle, img, threshold):
     h, w, _ = img.shape
 
     matches_list = []
     times_list = []
-    for p in percentages:
-        scaled_img = cv2.resize(img, (int(h*p), int(w*p)))
+    for a in angle:
+        rotated_image = rotate_image(img, a)
 
         start = time.time()
 
-        new_matches = algorithm(img, scaled_img)
+        new_matches = algorithm(img, rotated_image)
 
         times_list.append(time.time() - start)
 
@@ -32,13 +40,13 @@ def run():
 
     algorithms = [surf, sift, kaze, akaze]
 
-    percentages = np.arange(0.5, 5, 0.1)
+    angles = np.arange(0, 360, 45)
 
     match_results = []
     time_results = []
     for a in algorithms:
         print("{0} / {1}".format(algorithms.index(a) + 1, len(algorithms)))
-        match, t = algorithm_scale_test(a, percentages, img, 500)
+        match, t = algorithm_rotation_test(a, angles, img, 500)
 
         match_results.append(match)
         time_results.append(t)
@@ -46,12 +54,12 @@ def run():
     plt.figure()
 
     for r, i in zip(match_results, range(len(match_results))):
-        plt.plot(percentages, r, algorithm_to_color(algorithms[i]))
+        plt.plot(angles, r, algorithm_to_color(algorithms[i]))
 
     plt.figure()
 
     for t, i in zip(time_results, range(len(time_results))):
-        plt.plot(percentages, t, algorithm_to_color(algorithms[i]))
+        plt.plot(angles, t, algorithm_to_color(algorithms[i]))
 
     plt.show()
 
