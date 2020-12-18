@@ -5,7 +5,7 @@ import time
 import cv2
 
 from src.experiments.metrics import distance_avg_metric
-from src.experiments.utils import algorithm_to_color, img_from_file, normalize
+from src.experiments.utils import algorithm_to_color, img_from_file, normalize, algorithm_name
 
 
 def algorithm_scale_test(algorithm, percentages, img, metric):
@@ -44,17 +44,26 @@ def run():
         match_results.append(match)
         time_results.append(t)
 
-    plt.figure()
+    fig = plt.figure()
+    fig.suptitle('Escalado')
+    plt.xlabel('Porcentaje')
+    plt.ylabel('Distancia promedio entre todos los matches')
 
+    legends = []
     for r, i in zip(match_results, range(len(match_results))):
         plt.plot(percentages, normalize(r), algorithm_to_color(algorithms[i]))
+        legends.append(algorithm_name(algorithms[i]))
 
-    plt.figure()
+    plt.legend(legends)
 
+    fig = plt.figure()
+    fig.suptitle('Ruido salt and pepper')
+    plt.xlabel('Parametro')
+    plt.ylabel('Tiempo de procesamiento')
+
+    legends = []
     for t, i in zip(time_results, range(len(time_results))):
         plt.plot(percentages, t, algorithm_to_color(algorithms[i]))
+        legends.append(algorithm_name(algorithms[i]))
 
-    plt.show()
-
-
-run()
+    plt.legend(legends)

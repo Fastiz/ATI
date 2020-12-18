@@ -61,7 +61,6 @@ def run():
         legends.append(algorithm_name(algorithms[i]))
 
     plt.legend(legends)
-    plt.show()
 
     fig = plt.figure()
     fig.suptitle('../../images/Lenaclor.ppm')
@@ -74,8 +73,6 @@ def run():
         legends.append(algorithm_name(algorithms[i]))
 
     plt.legend(legends)
-
-    plt.show()
 
 
 run()
