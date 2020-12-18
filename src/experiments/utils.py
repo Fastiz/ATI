@@ -33,3 +33,11 @@ def normalize(values):
     min_value = min(values)
 
     return [(x - min_value) / (max_value - min_value) for x in values]
+
+
+def sum_lists(list1, list2):
+    return [a + b for a, b in zip(list1, list2)]
+
+
+def scalar_multiplication(a, list1):
+    return [a * x for x in list1]

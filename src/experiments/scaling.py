@@ -5,7 +5,8 @@ import time
 import cv2
 
 from src.experiments.metrics import distance_avg_metric
-from src.experiments.utils import algorithm_to_color, img_from_file, normalize, algorithm_name
+from src.experiments.utils import algorithm_to_color, img_from_file, normalize, algorithm_name, scalar_multiplication, \
+    sum_lists
 
 
 def algorithm_scale_test(algorithm, percentages, img, metric):
@@ -29,20 +30,26 @@ def algorithm_scale_test(algorithm, percentages, img, metric):
 
 
 def run():
-    img = img_from_file('../../images/Lenaclor.ppm')
+    imgs = [img_from_file('../../dataset/img' + str(i) + '.ppm') for i in range(1, 7)]
 
     algorithms = [surf, sift, kaze, akaze]
 
-    percentages = np.arange(0.5, 5, 0.1)
+    percentages = np.arange(0.5, 5, 0.25)
 
     match_results = []
     time_results = []
     for a in algorithms:
         print("{0} / {1}".format(algorithms.index(a) + 1, len(algorithms)))
-        match, t = algorithm_scale_test(a, percentages, img, distance_avg_metric())
-        print(match)
-        match_results.append(match)
-        time_results.append(t)
+        sum_list_error = [0] * len(percentages)
+        sum_list_time = [0] * len(percentages)
+        for img in imgs:
+            match, t = algorithm_scale_test(a, percentages, img, distance_avg_metric())
+
+            sum_list_error = sum_lists(sum_list_error, match)
+            sum_list_time = sum_lists(sum_list_time, t)
+
+        match_results.append(scalar_multiplication(1.0 / len(imgs), sum_list_error))
+        time_results.append(scalar_multiplication(1.0 / len(imgs), sum_list_time))
 
     fig = plt.figure()
     fig.suptitle('Escalado')
@@ -55,6 +62,10 @@ def run():
         legends.append(algorithm_name(algorithms[i]))
 
     plt.legend(legends)
+
+    for r, i in zip(match_results, range(len(match_results))):
+        normalized_r = normalize(r)
+        plt.axhline(y=sum(normalized_r) / len(normalized_r), color=algorithm_to_color(algorithms[i]), linestyle='-')
 
     fig = plt.figure()
     fig.suptitle('Escalado')

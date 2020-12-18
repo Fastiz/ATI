@@ -5,7 +5,7 @@ from src.experiments.utils import img_from_file
 
 
 def run():
-    img = img_from_file('../../images/Lenaclor.ppm')
+    imgs = [img_from_file('../../dataset/img' + str(i) + '.ppm') for i in range(1, 7)]
 
     fig = plt.figure()
 
@@ -13,8 +13,14 @@ def run():
     values = []
 
     for method in [cv2.xfeatures2d.SIFT_create(), cv2.xfeatures2d.SURF_create(), cv2.KAZE_create(), cv2.AKAZE_create()]:
-        keypoints, descriptors = method.detectAndCompute(img, None)
-        values.append(len(descriptors))
+        sum_value = 0
+        for img in imgs:
+            keypoints, descriptors = method.detectAndCompute(img, None)
+            sum_value += len(descriptors)
+        values.append(sum_value / float(len(imgs)))
 
     plt.bar(labels, values)
+
+run()
+plt.show()
 

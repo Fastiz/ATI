@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from src.experiments.algorithms import *
 from src.experiments.metrics import distance_avg_metric
-from src.experiments.utils import algorithm_to_color, img_from_file, normalize, algorithm_name
+from src.experiments.utils import algorithm_to_color, img_from_file, normalize, algorithm_name, sum_lists, \
+    scalar_multiplication
 
 
 def rotate_image(image, angle):
@@ -34,21 +35,27 @@ def algorithm_rotation_test(algorithm, angle, img, metric):
 
 
 def run():
-    img = img_from_file('../../images/Lenaclor.ppm')
+    imgs = [img_from_file('../../dataset/img' + str(i) + '.ppm') for i in range(1, 7)]
 
     algorithms = [surf, sift, kaze, akaze]
     #algorithms = [kaze, akaze]
 
-    angles = np.arange(0, 360, 90)
+    angles = np.arange(0, 360, 10)
 
     match_results = []
     time_results = []
     for a in algorithms:
         print("{0} / {1}".format(algorithms.index(a) + 1, len(algorithms)))
-        match, t = algorithm_rotation_test(a, angles, img, distance_avg_metric())
-        print(match)
-        match_results.append(match)
-        time_results.append(t)
+        sum_list_error = [0] * len(angles)
+        sum_list_time = [0] * len(angles)
+        for img in imgs:
+            match, t = algorithm_rotation_test(a, angles, img, distance_avg_metric())
+
+            sum_list_error = sum_lists(sum_list_error, match)
+            sum_list_time = sum_lists(sum_list_time, t)
+
+        match_results.append(scalar_multiplication(1.0/len(imgs), sum_list_error))
+        time_results.append(scalar_multiplication(1.0/len(imgs), sum_list_time))
 
     fig = plt.figure()
     fig.suptitle('Rotación')
