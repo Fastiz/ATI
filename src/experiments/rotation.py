@@ -39,7 +39,7 @@ def run():
     algorithms = [surf, sift, kaze, akaze]
     #algorithms = [kaze, akaze]
 
-    angles = np.arange(0, 360, 5)
+    angles = np.arange(0, 360, 90)
 
     match_results = []
     time_results = []
@@ -51,19 +51,24 @@ def run():
         time_results.append(t)
 
     fig = plt.figure()
-    fig.suptitle('../../images/Lenaclor.ppm')
+    fig.suptitle('Rotación')
     plt.xlabel('Angulo de rotación (grados)')
     plt.ylabel('Distancia promedio entre todos los matches')
 
     legends = []
     for r, i in zip(match_results, range(len(match_results))):
-        plt.plot(angles, normalize(r), algorithm_to_color(algorithms[i]))
+        normalized_r = normalize(r)
+        plt.plot(angles, normalized_r, algorithm_to_color(algorithms[i]))
         legends.append(algorithm_name(algorithms[i]))
 
     plt.legend(legends)
 
+    for r, i in zip(match_results, range(len(match_results))):
+        normalized_r = normalize(r)
+        plt.axhline(y=sum(normalized_r) / len(normalized_r), color=algorithm_to_color(algorithms[i]), linestyle='-')
+
     fig = plt.figure()
-    fig.suptitle('../../images/Lenaclor.ppm')
+    fig.suptitle('Rotación')
     plt.xlabel('Angulo de rotación (grados)')
     plt.ylabel('Tiempo de procesamiento')
 
@@ -74,7 +79,5 @@ def run():
 
     plt.legend(legends)
 
-
 run()
-
-# TODO PROMEDIO DE ERROR / ANGULO
+plt.show()

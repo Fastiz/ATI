@@ -57,7 +57,7 @@ def run():
     plt.legend(legends)
 
     fig = plt.figure()
-    fig.suptitle('Ruido salt and pepper')
+    fig.suptitle('Escalado')
     plt.xlabel('Parametro')
     plt.ylabel('Tiempo de procesamiento')
 
@@ -67,3 +67,6 @@ def run():
         legends.append(algorithm_name(algorithms[i]))
 
     plt.legend(legends)
+
+run()
+plt.show()

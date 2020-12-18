@@ -18,6 +18,3 @@ def run():
 
     plt.bar(labels, values)
 
-
-run()
-plt.show()
