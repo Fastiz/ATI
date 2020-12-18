@@ -21,6 +21,31 @@ def apply_gaussian_noise(image, parameter):
     return np.array(result)
 
 
+def apply_experiment(algorithms, images, metric, transformation_func, transformation_parameters):
+    transformations = [[transformation_func(img, parameter) for img in images] for parameter in
+                       transformation_parameters]
+
+    results = []
+    for alg_index in range(len(algorithms)):
+        algorithm = algorithms[alg_index]
+
+        distances_avg_list = []
+        times_global_list = []
+        for parameter_transform in transformations:
+            times_list = []
+            for img_index in range(len(parameter_transform)):
+                start = time.time()
+                new_matches = algorithm(images[img_index], parameter_transform[img_index])
+                times_list.append(time.time() - start)
+                distances_avg_list.append(metric(new_matches))
+            times_global_list.append(times_list)
+
+        results.append(normalize(distances_avg_list))
+        #results.append((normalize(distances_avg_list), times_global_list))
+
+    return results
+
+
 def algorithm_noise_test(algorithm, parameter, img, metric, apply_noise):
     h, w, _ = img.shape
 
@@ -43,8 +68,8 @@ def algorithm_noise_test(algorithm, parameter, img, metric, apply_noise):
 def run_gaussian_noise():
     img = img_from_file('../../images/Lenaclor.ppm')
 
-    algorithms = [surf, sift, kaze, akaze]
-    #algorithms = [kaze, akaze]
+    # algorithms = [surf, sift, kaze, akaze]
+    algorithms = [kaze, akaze]
 
     parameter = np.arange(0, 50, 10)
 
@@ -85,8 +110,8 @@ def run_gaussian_noise():
 def run_salt_and_pepper():
     img = img_from_file('../../images/Lenaclor.ppm')
 
-    algorithms = [surf, sift, kaze, akaze]
-    # algorithms = [kaze, akaze]
+    # algorithms = [surf, sift, kaze, akaze]
+    algorithms = [kaze, akaze]
 
     parameter = np.arange(0, 0.1, 0.01)
 
@@ -111,7 +136,6 @@ def run_salt_and_pepper():
 
     plt.legend(legends)
 
-
     fig = plt.figure()
     fig.suptitle('Ruido salt and pepper')
     plt.xlabel('Parametro')
@@ -123,3 +147,37 @@ def run_salt_and_pepper():
         legends.append(algorithm_name(algorithms[i]))
 
     plt.legend(legends)
+
+
+def run():
+    images_path = ['../../images/Lenaclor.ppm']
+    images = [img_from_file(path) for path in images_path]
+    # algorithms = [surf, sift, kaze, akaze]
+    algorithms = [kaze, akaze]
+
+    parameters = np.arange(0, 30, 5)[1:]
+
+    results = apply_experiment(
+        algorithms=algorithms,
+        images=images,
+        metric=distance_avg_metric(),
+        transformation_func=apply_salt_and_pepper,
+        transformation_parameters=parameters
+    )
+
+    fig = plt.figure()
+    fig.suptitle('Ruido gaussiano')
+    plt.xlabel('Sigma')
+    plt.ylabel('Distancia promedio entre todos los matches')
+
+    legends = []
+    for r, i in zip(results, range(len(results))):
+        plt.plot(parameters, r, algorithm_to_color(algorithms[i]))
+        legends.append(algorithm_name(algorithms[i]))
+
+    plt.legend(legends)
+
+    plt.show()
+
+
+run()
