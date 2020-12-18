@@ -63,10 +63,6 @@ def run():
 
     plt.legend(legends)
 
-    for r, i in zip(match_results, range(len(match_results))):
-        normalized_r = normalize(r)
-        plt.axhline(y=sum(normalized_r) / len(normalized_r), color=algorithm_to_color(algorithms[i]), linestyle='-')
-
     fig = plt.figure()
     fig.suptitle('Escalado')
     plt.xlabel('Parametro')

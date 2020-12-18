@@ -68,11 +68,10 @@ def run():
         plt.plot(angles, normalized_r, algorithm_to_color(algorithms[i]))
         legends.append(algorithm_name(algorithms[i]))
 
-    plt.legend(legends)
+        plt.axhline(y=sum(normalized_r) / len(normalized_r), color=algorithm_to_color(algorithms[i]), linestyle='dashed')
+        legends.append(f"{algorithm_name(algorithms[i])} (media)")
 
-    for r, i in zip(match_results, range(len(match_results))):
-        normalized_r = normalize(r)
-        plt.axhline(y=sum(normalized_r) / len(normalized_r), color=algorithm_to_color(algorithms[i]), linestyle='-')
+    plt.legend(legends)
 
     fig = plt.figure()
     fig.suptitle('Rotación')
