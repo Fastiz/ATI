@@ -161,7 +161,7 @@ def run():
         algorithms=algorithms,
         images=images,
         metric=distance_avg_metric(),
-        transformation_func=apply_salt_and_pepper,
+        transformation_func=apply_gaussian_noise,
         transformation_parameters=parameters
     )
 
@@ -174,6 +174,9 @@ def run():
     for r, i in zip(results, range(len(results))):
         plt.plot(parameters, r, algorithm_to_color(algorithms[i]))
         legends.append(algorithm_name(algorithms[i]))
+
+        plt.axhline(y=sum(r) / len(r), color=algorithm_to_color(algorithms[i]), linestyle='dashed')
+        legends.append(f"{algorithm_name(algorithms[i])} (media)")
 
     plt.legend(legends)
 
